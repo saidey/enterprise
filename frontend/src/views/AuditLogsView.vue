@@ -17,7 +17,7 @@
       <div
         class="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-xs sm:px-6 dark:border-white/10 dark:bg-gray-900"
       >
-        <div class="flex flex-wrap items-end gap-3">
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <!-- Action filter (dynamic) -->
           <div class="flex flex-col gap-1">
             <label
@@ -59,18 +59,53 @@
             />
           </div>
 
+          <!-- Model filter -->
+          <div class="flex flex-col gap-1">
+            <label
+              for="model-filter"
+              class="text-xs/5 font-medium text-gray-700 dark:text-gray-300"
+            >
+              Model
+            </label>
+            <input
+              id="model-filter"
+              v-model="filters.auditable_type"
+              type="text"
+              class="w-56 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm/6 text-gray-900 outline-hidden placeholder:text-gray-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus-visible:outline-indigo-500"
+              placeholder="e.g. App\\Models\\User"
+            />
+          </div>
+
+          <!-- Meta -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs/5 font-medium text-gray-700 dark:text-gray-300">
+              Meta
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <input
+                type="checkbox"
+                v-model="filters.has_operation"
+                class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/15"
+              />
+              Has operation context
+            </label>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p class="text-xs text-red-500" v-if="filtersError">{{ filtersError }}</p>
           <div class="flex flex-1 justify-end gap-3">
             <button
               type="button"
               class="inline-flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 dark:focus-visible:outline-white"
-              @click="() => { filters.action = ''; filters.user_id = ''; loadLogs(1) }"
+              @click="() => { filters.action = ''; filters.user_id = ''; filters.auditable_type=''; filters.has_operation=false; loadLogs(1) }"
             >
               Clear
             </button>
             <button
               type="button"
               class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500"
-              @click="loadLogs(1)"
+              @click="onSubmitFilters"
             >
               Apply filters
             </button>
@@ -437,6 +472,7 @@ const logs = ref([])
 const meta = ref(null)
 const loading = ref(false)
 const error = ref(null)
+const filtersError = ref(null)
 
 // dynamic actions
 const actions = ref([])
@@ -453,6 +489,8 @@ const detail = ref({
 const filters = ref({
   action: '',
   user_id: '',
+  auditable_type: '',
+  has_operation: false,
 })
 
 // sort state
@@ -480,6 +518,11 @@ const loadActions = async () => {
     console.error('Failed to load actions', e)
     actions.value = []
   }
+}
+
+const onSubmitFilters = () => {
+  filtersError.value = null
+  loadLogs(1)
 }
 
 // Humanize action labels (e.g. "logged_in" -> "logged in")
@@ -546,6 +589,8 @@ const loadLogs = async (page = 1) => {
       page,
       action: filters.value.action || undefined,
       user_id: filters.value.user_id || undefined,
+      auditable_type: filters.value.auditable_type || undefined,
+      has_operation: filters.value.has_operation || undefined,
       sort_by: sort.value.by,
       sort_dir: sort.value.dir,
     })
