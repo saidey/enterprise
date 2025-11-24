@@ -7,6 +7,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserPermissionController extends Controller
 {
@@ -19,10 +20,15 @@ class UserPermissionController extends Controller
         $this->authorize('users.manage_permissions');
 
         $perPage = (int) $request->get('per_page', 20);
+        $actor = $request->user();
+        $actorIsSuper = $actor?->hasRole('superadmin');
 
         $users = User::query()
             ->select('id', 'name', 'email')
             ->with('roles:id,name') // basic role info
+            ->when(! $actorIsSuper, function ($q) {
+                $q->whereDoesntHave('roles', fn ($r) => $r->where('name', 'superadmin'));
+            })
             ->orderBy('name')
             ->paginate($perPage);
 
@@ -36,8 +42,16 @@ class UserPermissionController extends Controller
     {
         $this->authorize('users.manage_permissions');
 
+        $actor = Auth::user();
+        $actorIsSuper = $actor?->hasRole('superadmin');
+
+        $roles = Role::select(['id', 'name', 'role_scope'])
+            ->when(! $actorIsSuper, fn ($q) => $q->where('name', '!=', 'superadmin'))
+            ->orderBy('name')
+            ->get();
+
         return response()->json([
-            'roles' => Role::select(['id', 'name'])->orderBy('name')->get(),
+            'roles' => $roles,
             'permissions' => Permission::select(['id', 'name'])->orderBy('name')->get(),
         ]);
     }
@@ -49,7 +63,14 @@ class UserPermissionController extends Controller
     {
         $this->authorize('users.manage_permissions');
 
-        $user->load('roles:id,name', 'permissions:id,name');
+        $actor = Auth::user();
+        $actorIsSuper = $actor?->hasRole('superadmin');
+
+        if (! $actorIsSuper && $user->hasRole('superadmin')) {
+            abort(403, 'Cannot manage superadmin.');
+        }
+
+        $user->load('roles:id,name,role_scope', 'permissions:id,name');
 
         return response()->json($user);
     }
@@ -68,6 +89,27 @@ class UserPermissionController extends Controller
             'permission_ids' => ['array'],
             'permission_ids.*' => ['uuid'],
         ]);
+
+        $actor = $request->user();
+        $actorIsSuper = $actor?->hasRole('superadmin');
+
+        $superRoleId = Role::where('name', 'superadmin')->value('id');
+        $requestingSuper = $superRoleId && in_array($superRoleId, $data['role_ids'] ?? [], true);
+
+        if ($requestingSuper && ! $actorIsSuper) {
+            abort(403, 'Only superadmin can assign the superadmin role.');
+        }
+
+        if (! $actorIsSuper && $user->hasRole('superadmin')) {
+            abort(403, 'Cannot modify the superadmin user.');
+        }
+
+        if ($requestingSuper) {
+            $existingSuper = User::role('superadmin')
+                ->where('id', '!=', $user->id)
+                ->first();
+            abort_if($existingSuper, 422, 'Only one superadmin is allowed.');
+        }
 
         // Capture old state for auditing
         $oldState = [

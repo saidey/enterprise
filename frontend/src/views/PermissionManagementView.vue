@@ -215,45 +215,87 @@
                   </button>
                 </div>
 
-                <div class="mt-3 flex-1 overflow-y-auto">
+                <div class="mt-3 flex-1 overflow-y-auto space-y-4">
                   <div
-                    v-if="!roles.length"
+                    v-if="!platformRoles.length && !companyRoles.length"
                     class="py-4 text-xs/5 text-gray-500 dark:text-gray-400"
                   >
                     No roles configured.
                   </div>
-                  <ul
-                    v-else
-                    role="list"
-                    class="space-y-1"
-                  >
-                    <li
-                      v-for="role in roles"
-                      :key="role.id"
-                    >
-                      <label
-                        class="flex cursor-pointer items-start gap-x-3 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/5"
+
+                  <div v-if="platformRoles.length" class="space-y-2">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Platform roles
+                    </p>
+                    <ul class="space-y-1">
+                      <li
+                        v-for="role in platformRoles"
+                        :key="role.id"
                       >
-                        <input
-                          v-model="selectedRoleIds"
-                          :value="role.id"
-                          type="checkbox"
-                          class="mt-1 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-gray-900"
-                        />
-                        <div class="min-w-0">
-                          <p class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
-                            {{ role.name }}
-                          </p>
-                          <p
-                            v-if="role.description"
-                            class="text-xs/5 text-gray-500 dark:text-gray-400"
-                          >
-                            {{ role.description }}
-                          </p>
-                        </div>
-                      </label>
-                    </li>
-                  </ul>
+                        <label
+                          class="flex cursor-pointer items-start gap-x-3 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/5"
+                        >
+                          <input
+                            v-model="selectedRoleIds"
+                            :value="role.id"
+                            type="checkbox"
+                            class="mt-1 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-gray-900"
+                          />
+                          <div class="min-w-0">
+                            <p class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+                              {{ role.name }}
+                            </p>
+                            <p
+                              v-if="role.description"
+                              class="text-xs/5 text-gray-500 dark:text-gray-400"
+                            >
+                              {{ role.description }}
+                            </p>
+                          </div>
+                          <span class="text-[11px] font-medium uppercase tracking-wide text-indigo-500 dark:text-indigo-300">
+                            Platform
+                          </span>
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div v-if="companyRoles.length" class="space-y-2">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      Company roles
+                    </p>
+                    <ul class="space-y-1">
+                      <li
+                        v-for="role in companyRoles"
+                        :key="role.id"
+                      >
+                        <label
+                          class="flex cursor-pointer items-start gap-x-3 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/5"
+                        >
+                          <input
+                            v-model="selectedRoleIds"
+                            :value="role.id"
+                            type="checkbox"
+                            class="mt-1 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-gray-900"
+                          />
+                          <div class="min-w-0">
+                            <p class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
+                              {{ role.name }}
+                            </p>
+                            <p
+                              v-if="role.description"
+                              class="text-xs/5 text-gray-500 dark:text-gray-400"
+                            >
+                              {{ role.description }}
+                            </p>
+                          </div>
+                          <span class="text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                            Company
+                          </span>
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
 
@@ -414,6 +456,9 @@ const filteredUsers = computed(() => {
     return name.includes(term) || email.includes(term)
   })
 })
+
+const platformRoles = computed(() => roles.value.filter((r) => r.role_scope === 'platform'))
+const companyRoles = computed(() => roles.value.filter((r) => r.role_scope === 'company'))
 
 const loadInitial = async () => {
   loading.value = true

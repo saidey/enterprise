@@ -42,6 +42,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 2) Platform roles
         $platformRoles = [
+            'superadmin' => [
+                'permissions' => Permission::all()->pluck('name')->all(),
+            ],
             'platform_admin' => [
                 'permissions' => Permission::all()->pluck('name')->all(),
             ],
@@ -94,7 +97,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 3) Seed users
 
-        // Admin
+        // Admin (platform)
         $admin = User::firstOrCreate(
             ['email' => 'admin@example.com'],
             [
@@ -104,8 +107,22 @@ class RolesAndPermissionsSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        if (! $admin->hasRole('administrator')) {
-            $admin->assignRole('administrator');
+        if (! $admin->hasRole('platform_admin')) {
+            $admin->assignRole('platform_admin');
+        }
+
+        // Superadmin (only one)
+        $superadmin = User::firstOrCreate(
+            ['email' => 'superadmin@example.com'],
+            [
+                'id' => (string) Str::orderedUuid(),
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
+        if (! $superadmin->hasRole('superadmin')) {
+            $superadmin->syncRoles(['superadmin']); // ensure exclusive role
         }
 
         // Test user (no roles/permissions)
