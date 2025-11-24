@@ -97,18 +97,14 @@ trait Auditable
         $user = Auth::user();
         $request = Request::instance();
 
-        // Try to infer company_id from model; fallback to currentCompanyId()
-        $companyId = null;
-
-        if (isset($this->company_id)) {
-            $companyId = $this->company_id;
-        } else {
-            $companyId = currentCompanyId();
-        }
+        // Infer tenant context from the model, otherwise fallback to helpers
+        $companyId = $this->company_id ?? currentCompanyId();
+        $operationId = $this->operation_id ?? currentOperationId();
 
         StoreAuditLog::dispatch(
             userId: $user?->id,
             companyId: $companyId,
+            operationId: $operationId,
             action: $action,
             auditableType: static::class,
             auditableId: (string) $this->getKey(),

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\UserPermissionController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Audit\AuditLogController;
 use App\Http\Controllers\Company\CompanyController;
+use App\Http\Controllers\Company\ModuleController;
 use App\Http\Controllers\Company\OperationController;
 use App\Http\Controllers\Company\SessionCompanyController;
 use App\Http\Controllers\Company\SessionOperationController;
@@ -35,6 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Operation session
         Route::post('/session/operation/{operation}', [SessionOperationController::class, 'set']);
         Route::get('/session/operation', [SessionOperationController::class, 'show']);
+
+        // Modules enabled for company
+        Route::get('/modules/enabled', [ModuleController::class, 'enabled']);
 
         // Audit logs (scoped to current company)
         Route::get('/audit/logs', [AuditLogController::class, 'index']);

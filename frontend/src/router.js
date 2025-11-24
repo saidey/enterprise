@@ -13,7 +13,7 @@ import CreateCompanyView from './views/CreateCompanyView.vue'
 
 import ProfileView from './views/ProfileView.vue'
 
-import { fetchUser } from './api'
+import { fetchEnabledModules, fetchUser } from './api'
 import { useSession } from './composables/useSession'
 
 const routes = [
@@ -110,9 +110,13 @@ const router = createRouter({
 ---------------------------- */
 let cachedUser = null
 const session = useSession()
+let cachedModules = []
+let cachedModulesCompanyId = null
 
 export const resetCachedUser = () => {
     cachedUser = null
+    cachedModules = []
+    cachedModulesCompanyId = null
     session.resetSession()
 }
 
@@ -174,6 +178,32 @@ router.beforeEach(async (to, from, next) => {
             name: 'select-operation',
             query: { redirect: to.fullPath }
         })
+    }
+
+    // ---- MODULES CHECK / FETCH ----
+    if (needsCompany && currentCompany) {
+        try {
+            if (!cachedModules.length || cachedModulesCompanyId !== currentCompany) {
+                const { data } = await fetchEnabledModules()
+                cachedModules = data.data || []
+                cachedModulesCompanyId = currentCompany
+                session.setModules(cachedModules)
+            } else {
+                session.setModules(cachedModules)
+            }
+        } catch (err) {
+            console.warn('Failed to load modules for company', err)
+            return next({ name: 'home' })
+        }
+    }
+
+    // ---- MODULE ACCESS CHECK ----
+    if (to.meta.app && to.meta.app !== 'admin') {
+        const enabledCodes = new Set((session.modules.value || []).map((m) => m.code))
+        if (!enabledCodes.has(to.meta.app)) {
+            console.warn(`Module ${to.meta.app} not enabled for this company`)
+            return next({ name: 'home' })
+        }
     }
 
     // ---- APP CONTEXT ----

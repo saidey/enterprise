@@ -3,6 +3,7 @@
 namespace App\Models\Audit;
 
 use App\Models\Company\Company;
+use App\Models\Company\Operation;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid; // if you're using ordered UUIDs
 use App\Models\User;
@@ -49,5 +50,10 @@ class AuditLog extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function operation()
+    {
+        return $this->belongsTo(Operation::class);
     }
 }

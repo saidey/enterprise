@@ -361,7 +361,15 @@ const router = useRouter()
 const sidebarOpen = ref(false)
 
 // session (company / operation / app)
-const { user, currentCompany, currentOperation, currentApp, hasPermission, setCurrentApp } = useSession()
+const {
+  user,
+  currentCompany,
+  currentOperation,
+  currentApp,
+  modules,
+  hasPermission,
+  setCurrentApp
+} = useSession()
 
 const companyName = computed(() => currentCompany.value?.name || '')
 const operationName = computed(() => currentOperation.value?.name || '')
@@ -391,8 +399,12 @@ const currentAppLabel = computed(() => {
  */
 const navigation = computed(() => {
   const app = currentApp.value
+  const enabledModules = new Set((modules.value || []).map((m) => m.code))
 
   if (app === 'hr') {
+    if (!enabledModules.has('hr')) {
+      return [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
+    }
     return [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
       { name: 'HR overview', to: '/apps/hr', icon: HomeIcon },
@@ -402,6 +414,9 @@ const navigation = computed(() => {
   }
 
   if (app === 'accounting') {
+    if (!enabledModules.has('accounting')) {
+      return [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
+    }
     return [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
       { name: 'Accounting overview', to: '/apps/accounting', icon: HomeIcon },
@@ -421,9 +436,17 @@ const navigation = computed(() => {
   }
 
   // Default / launcher navigation
-  return [
-    { name: 'Apps dashboard', to: '/', icon: HomeIcon },
-  ]
+  const items = [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
+
+  if (enabledModules.has('hr')) {
+    items.push({ name: 'HR', to: '/apps/hr', icon: DocumentDuplicateIcon })
+  }
+  if (enabledModules.has('accounting')) {
+    items.push({ name: 'Accounting', to: '/apps/accounting', icon: DocumentDuplicateIcon })
+  }
+  items.push({ name: 'Admin', to: '/admin', icon: Cog6ToothIcon })
+
+  return items
 })
 
 const adminNavigation = computed(() => ([

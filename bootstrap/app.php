@@ -3,6 +3,7 @@
 use App\Http\Middleware\AppendCompanyToJson;
 use App\Http\Middleware\EnsureCompanySelected;
 use App\Http\Middleware\EnsureOperationSelected;
+use App\Http\Middleware\EnsureModuleEnabled;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'company.selected' => EnsureCompanySelected::class,
             'operation.selected' => EnsureOperationSelected::class,
+            'module' => EnsureModuleEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

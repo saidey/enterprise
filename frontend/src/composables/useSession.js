@@ -9,6 +9,7 @@ const state = reactive({
     currentOperation: null,
     currentApp: initialApp, // 'hr' | 'accounting' | 'settings' | ...
     permissions: [],  // ['hr.view_dashboard', 'accounting.view_ledger', ...]
+    modules: [], // [{ code, name }]
 })
 
 export function useSession() {
@@ -47,6 +48,10 @@ export function useSession() {
         state.permissions = perms || []
     }
 
+    const setModules = (mods) => {
+        state.modules = mods || []
+    }
+
     const hasPermission = (code) => {
         if (!code) return true
         return state.permissions.includes(code)
@@ -58,6 +63,7 @@ export function useSession() {
         state.currentOperation = null
         state.currentApp = null
         state.permissions = []
+        state.modules = []
         localStorage.removeItem('current_app')
     }
 
@@ -68,11 +74,13 @@ export function useSession() {
         currentOperation: computed(() => state.currentOperation),
         currentApp: computed(() => state.currentApp),
         permissions: computed(() => state.permissions),
+        modules: computed(() => state.modules),
         setUser,
         setCurrentCompany,
         setCurrentOperation,
         setCurrentApp,
         setPermissions,
+        setModules,
         hasPermission,
         resetSession,
     }

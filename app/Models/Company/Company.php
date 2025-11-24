@@ -45,4 +45,24 @@ class Company extends Model
     {
         return $this->hasMany(Operation::class);
     }
+
+    public function modules()
+    {
+        return $this->belongsToMany(\App\Models\Module::class, 'company_modules')
+            ->withPivot(['enabled', 'metadata'])
+            ->withTimestamps();
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(CompanySubscription::class);
+    }
+
+    public function activeSubscription(): ?CompanySubscription
+    {
+        return $this->subscriptions()
+            ->whereIn('status', ['active', 'trialing'])
+            ->latest('created_at')
+            ->first();
+    }
 }

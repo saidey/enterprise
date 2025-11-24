@@ -5,36 +5,48 @@ import AppShell from '../layouts/AppShell.vue'
 import { useSession } from '../composables/useSession'
 
 const router = useRouter()
-const { setCurrentApp, currentCompany, currentOperation } = useSession()
+const { setCurrentApp, currentCompany, currentOperation, modules } = useSession()
 
 const contextLabel = computed(() => {
   if (!currentCompany.value || !currentOperation.value) return 'Select a company and operation to continue.'
   return `${currentCompany.value.name} / ${currentOperation.value.name}`
 })
 
-const apps = [
-  {
-    key: 'hr',
-    name: 'HR',
-    description: 'Manage employees, leave, and people operations.',
-    to: '/apps/hr',
-    badge: 'People',
-  },
-  {
-    key: 'accounting',
-    name: 'Accounting',
-    description: 'Journals, ledgers, and finance reporting.',
-    to: '/apps/accounting',
-    badge: 'Finance',
-  },
-  {
+const availableApps = computed(() => {
+  const enabled = new Set((modules.value || []).map((m) => m.code))
+
+  const base = []
+
+  if (enabled.has('hr')) {
+    base.push({
+      key: 'hr',
+      name: 'HR',
+      description: 'Manage employees, leave, and people operations.',
+      to: '/apps/hr',
+      badge: 'People',
+    })
+  }
+
+  if (enabled.has('accounting')) {
+    base.push({
+      key: 'accounting',
+      name: 'Accounting',
+      description: 'Journals, ledgers, and finance reporting.',
+      to: '/apps/accounting',
+      badge: 'Finance',
+    })
+  }
+
+  base.push({
     key: 'admin',
     name: 'Admin',
     description: 'Permissions, audit logs, and organizational settings.',
     to: '/admin',
     badge: 'Admin',
-  },
-]
+  })
+
+  return base
+})
 
 const handleSelectApp = (app) => {
   setCurrentApp(app.key)
@@ -61,7 +73,7 @@ const handleSelectApp = (app) => {
 
       <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <button
-          v-for="app in apps"
+          v-for="app in availableApps"
           :key="app.key"
           type="button"
           class="flex flex-col items-start rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-px hover:border-indigo-500 hover:shadow-md dark:border-white/10 dark:bg-gray-900"
