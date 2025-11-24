@@ -8,6 +8,7 @@ use App\Http\Controllers\Company\ModuleController;
 use App\Http\Controllers\Company\OperationController;
 use App\Http\Controllers\Company\SessionCompanyController;
 use App\Http\Controllers\Company\SessionOperationController;
+use App\Http\Controllers\Hr\DepartmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/audit/logs', [AuditLogController::class, 'index']);
         Route::get('/audit/logs/actions', [AuditLogController::class, 'actions']);
         Route::get('/audit/logs/{log}', [AuditLogController::class, 'show']);
+
+        // HR
+        Route::middleware('module:hr')->prefix('hr')->group(function () {
+            Route::get('/departments/tree', [DepartmentController::class, 'tree']);
+            Route::post('/departments', [DepartmentController::class, 'store']);
+            Route::put('/departments/{department}', [DepartmentController::class, 'update']);
+            Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+        });
     });
 
     // Company & session

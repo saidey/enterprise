@@ -8,7 +8,7 @@ return [
     ],
     'accounting' => [
         'name' => 'Accounting',
-        'enabled' => false,
+        'enabled' => true,
         'service_provider' => null, // placeholder for module provider
     ],
 ];
