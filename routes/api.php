@@ -52,6 +52,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/departments', [DepartmentController::class, 'store']);
             Route::put('/departments/{department}', [DepartmentController::class, 'update']);
             Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+
+            Route::get('/employees', [\App\Http\Controllers\Hr\EmployeeController::class, 'index']);
+            Route::post('/employees', [\App\Http\Controllers\Hr\EmployeeController::class, 'store']);
+            Route::post('/employees/{employee}/assign-user', [\App\Http\Controllers\Hr\EmployeeController::class, 'assignUser']);
         });
     });
 

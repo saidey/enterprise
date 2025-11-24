@@ -1,51 +1,40 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { fetchDepartmentTree } from '../api'
+import { fetchDepartmentTree, fetchEmployees, createEmployee, assignEmployeeToUser } from '../api'
 
-// Placeholder data until backend API is wired in
-const employees = ref([
-  {
-    id: 'emp-1',
-    name: 'Aishath Latheefa',
-    title: 'People Partner',
-    department: 'HR',
-    status: 'Active',
-    location: 'Malé',
-    manager: 'Ahmed Rasheed',
-    startDate: '2023-02-10',
-  },
-  {
-    id: 'emp-2',
-    name: 'Hassan Zahir',
-    title: 'Front Office Supervisor',
-    department: 'Operations',
-    status: 'Probation',
-    location: 'Addu',
-    manager: 'Aishath Latheefa',
-    startDate: '2024-09-01',
-  },
-  {
-    id: 'emp-3',
-    name: 'Mariyam Shifana',
-    title: 'Payroll Specialist',
-    department: 'Finance',
-    status: 'Active',
-    location: 'Malé',
-    manager: 'Ahmed Rasheed',
-    startDate: '2022-07-18',
-  },
-])
+const employees = ref([])
+const loading = ref(false)
+const error = ref('')
 
 const search = ref('')
 const statusFilter = ref('all')
 const selectedDeptId = ref(null)
 
+const assignEmail = ref('')
+const assignEmployeeId = ref(null)
+const assignMessage = ref('')
+const assignError = ref('')
+
+const showCreate = ref(false)
+const createForm = ref({
+  employee_id: '',
+  name: '',
+  title: '',
+  status: 'active',
+  start_date: '',
+  email: '',
+  department_id: '',
+  user_email: '',
+})
+const createMessage = ref('')
+const createError = ref('')
+
 const departmentTree = ref([])
 const deptError = ref('')
 const deptLoading = ref(false)
 
-const statuses = ['all', 'Active', 'Probation', 'On Leave', 'Exited']
+const statuses = ['all', 'active', 'probation', 'on_leave', 'exited']
 
 const flatDepartments = computed(() => {
   const list = []
@@ -69,18 +58,19 @@ const selectedDeptName = computed(() => {
 const filtered = computed(() => {
   return employees.value.filter((emp) => {
     const matchesSearch =
-      emp.name.toLowerCase().includes(search.value.toLowerCase()) ||
-      emp.title.toLowerCase().includes(search.value.toLowerCase())
+      emp.name?.toLowerCase().includes(search.value.toLowerCase()) ||
+      emp.title?.toLowerCase().includes(search.value.toLowerCase()) ||
+      emp.employee_id?.toLowerCase().includes(search.value.toLowerCase())
 
-    const matchesDept = !selectedDeptName.value || emp.department === selectedDeptName.value
+    const matchesDept = !selectedDeptId.value || emp.department_id === selectedDeptId.value
     const matchesStatus = statusFilter.value === 'all' || emp.status === statusFilter.value
 
     return matchesSearch && matchesDept && matchesStatus
   })
 })
 
-const activeCount = computed(() => employees.value.filter((e) => e.status === 'Active').length)
-const probationCount = computed(() => employees.value.filter((e) => e.status === 'Probation').length)
+const activeCount = computed(() => employees.value.filter((e) => e.status === 'active').length)
+const probationCount = computed(() => employees.value.filter((e) => e.status === 'probation').length)
 
 const loadDepartmentTree = async () => {
   deptLoading.value = true
@@ -96,13 +86,78 @@ const loadDepartmentTree = async () => {
   }
 }
 
+const loadEmployees = async () => {
+  loading.value = true
+  error.value = ''
+  try {
+    const { data } = await fetchEmployees({
+      search: search.value || undefined,
+      department_id: selectedDeptId.value || undefined,
+      status: statusFilter.value === 'all' ? undefined : statusFilter.value,
+      per_page: 100,
+    })
+    employees.value = data.data || []
+  } catch (e) {
+    console.error(e)
+    error.value = 'Failed to load employees.'
+  } finally {
+    loading.value = false
+  }
+}
+
 const clearDept = () => {
   selectedDeptId.value = null
 }
 
 onMounted(() => {
   loadDepartmentTree()
+  loadEmployees()
 })
+
+const openAssign = (empId) => {
+  assignEmployeeId.value = empId
+  assignEmail.value = ''
+  assignMessage.value = ''
+  assignError.value = ''
+}
+
+const submitAssign = async () => {
+  if (!assignEmployeeId.value || !assignEmail.value) return
+  assignError.value = ''
+  assignMessage.value = ''
+  try {
+    await assignEmployeeToUser(assignEmployeeId.value, assignEmail.value)
+    assignMessage.value = 'User linked.'
+    await loadEmployees()
+  } catch (e) {
+    console.error(e)
+    assignError.value = e.response?.data?.message || 'Failed to link user.'
+  }
+}
+
+const submitCreate = async () => {
+  createError.value = ''
+  createMessage.value = ''
+  try {
+    await createEmployee(createForm.value)
+    createMessage.value = 'Employee created.'
+    showCreate.value = false
+    Object.assign(createForm.value, {
+      employee_id: '',
+      name: '',
+      title: '',
+      status: 'active',
+      start_date: '',
+      email: '',
+      department_id: '',
+      user_email: '',
+    })
+    await loadEmployees()
+  } catch (e) {
+    console.error(e)
+    createError.value = e.response?.data?.message || 'Failed to create employee.'
+  }
+}
 </script>
 
 <template>
@@ -124,6 +179,7 @@ onMounted(() => {
         <div class="flex gap-3">
           <button
             type="button"
+            @click="showCreate = true"
             class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           >
             Add employee
@@ -260,13 +316,15 @@ onMounted(() => {
               <tr v-for="emp in filtered" :key="emp.id" class="hover:bg-gray-50 dark:hover:bg-white/5">
                 <td class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
                   {{ emp.name }}
-                  <div class="text-xs font-normal text-gray-500 dark:text-gray-400">{{ emp.location }}</div>
+                  <div class="text-xs font-normal text-gray-500 dark:text-gray-400">
+                    {{ emp.employee_id || '—' }}
+                  </div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   {{ emp.title }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  {{ emp.department }}
+                  {{ emp.department?.name || '—' }}
                 </td>
                 <td class="px-4 py-3">
                   <span
@@ -281,18 +339,19 @@ onMounted(() => {
                   </span>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  {{ emp.manager }}
+                  {{ emp.user?.name || '—' }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  {{ emp.startDate }}
+                  {{ emp.start_date || '—' }}
                 </td>
                 <td class="px-4 py-3 text-right text-sm">
                   <div class="flex justify-end gap-2">
                     <button
                       type="button"
+                      @click="openAssign(emp.id)"
                       class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm hover:border-indigo-400 hover:text-indigo-600 dark:border-white/10 dark:text-gray-200 dark:hover:border-indigo-400 dark:hover:text-white"
                     >
-                      View
+                      Link user
                     </button>
                     <button
                       type="button"
@@ -310,6 +369,200 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
+
+          <div v-if="loading" class="border-t border-gray-200 px-4 py-3 text-sm text-gray-500 dark:border-white/5 dark:text-gray-400">
+            Loading employees…
+          </div>
+          <div v-if="error" class="border-t border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/30 dark:bg-red-950/40 dark:text-red-200">
+            {{ error }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create employee modal -->
+    <div
+      v-if="showCreate"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
+      <div class="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-gray-900">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Add employee</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Capture key details and optional login link.</p>
+          </div>
+          <button
+            type="button"
+            class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+            @click="showCreate = false"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form class="mt-4 space-y-4" @submit.prevent="submitCreate">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Employee ID</label>
+              <input
+                v-model="createForm.employee_id"
+                type="text"
+                placeholder="e.g. EMP-001"
+                class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Title</label>
+              <input
+                v-model="createForm.title"
+                type="text"
+                placeholder="e.g. People Partner"
+                class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Full name</label>
+            <input
+              v-model="createForm.name"
+              type="text"
+              required
+              placeholder="Employee full name"
+              class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+            />
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Status</label>
+              <select
+                v-model="createForm.status"
+                class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+              >
+                <option value="active">Active</option>
+                <option value="probation">Probation</option>
+                <option value="on_leave">On leave</option>
+                <option value="exited">Exited</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Start date</label>
+              <input
+                v-model="createForm.start_date"
+                type="date"
+                class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+              />
+            </div>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Work email</label>
+              <input
+                v-model="createForm.email"
+                type="email"
+                placeholder="name@company.com"
+                class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Link to user by email (optional)</label>
+              <input
+                v-model="createForm.user_email"
+                type="email"
+                placeholder="existing user email"
+                class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Department</label>
+            <select
+              v-model="createForm.department_id"
+              class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+            >
+              <option value="">No department</option>
+              <option
+                v-for="dept in flatDepartments"
+                :key="dept.id"
+                :value="dept.id"
+              >
+                {{ '—'.repeat(dept.depth) }} {{ dept.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <div class="text-xs text-red-500" v-if="createError">{{ createError }}</div>
+            <div class="text-xs text-emerald-500" v-if="createMessage">{{ createMessage }}</div>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:border-gray-300 dark:border-white/10 dark:text-gray-200"
+                @click="showCreate = false"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Assign user sheet -->
+    <div
+      v-if="assignEmployeeId"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
+      <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-gray-900">
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Link user</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Search by email to connect an employee to an existing user.</p>
+          </div>
+          <button
+            type="button"
+            class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+            @click="assignEmployeeId = null"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="mt-3 space-y-2">
+          <input
+            v-model="assignEmail"
+            type="email"
+            placeholder="user@example.com"
+            class="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
+          />
+          <div class="text-xs text-red-500" v-if="assignError">{{ assignError }}</div>
+          <div class="text-xs text-emerald-500" v-if="assignMessage">{{ assignMessage }}</div>
+        </div>
+
+        <div class="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            class="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm hover:border-gray-300 dark:border-white/10 dark:text-gray-200"
+            @click="assignEmployeeId = null"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            @click="submitAssign"
+          >
+            Link
+          </button>
         </div>
       </div>
     </div>

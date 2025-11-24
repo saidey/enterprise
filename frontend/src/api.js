@@ -183,6 +183,20 @@ export function fetchDepartmentTree() {
     return api.get('/api/hr/departments/tree')
 }
 
+export function fetchEmployees(params = {}) {
+    return api.get('/api/hr/employees', { params })
+}
+
+export function createEmployee(payload) {
+    return api.post('/api/hr/employees', payload)
+}
+
+export function assignEmployeeToUser(employeeId, userEmail) {
+    return api.post(`/api/hr/employees/${employeeId}/assign-user`, {
+        user_email: userEmail,
+    })
+}
+
 /* ============================================================================
  * Operations & session
  * ========================================================================== */
