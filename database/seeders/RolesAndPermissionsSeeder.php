@@ -40,40 +40,57 @@ class RolesAndPermissionsSeeder extends Seeder
             );
         }
 
-        // 2) Roles
-        $adminRole = Role::firstOrCreate(
-            ['name' => 'administrator', 'guard_name' => 'web'],
-            ['id' => (string) Str::orderedUuid()]
-        );
+        // 2) Platform roles
+        $platformRoles = [
+            'platform_admin' => [
+                'permissions' => Permission::all()->pluck('name')->all(),
+            ],
+            'support_agent' => [
+                'permissions' => ['auditlog.view'],
+            ],
+        ];
 
-        $editorRole = Role::firstOrCreate(
-            ['name' => 'editor', 'guard_name' => 'web'],
-            ['id' => (string) Str::orderedUuid()]
-        );
+        foreach ($platformRoles as $name => $meta) {
+            $role = Role::firstOrCreate(
+                ['name' => $name, 'guard_name' => 'web'],
+                [
+                    'id' => (string) Str::orderedUuid(),
+                    'role_scope' => 'platform',
+                ]
+            );
+            $role->syncPermissions($meta['permissions']);
+        }
 
-        $viewerRole = Role::firstOrCreate(
-            ['name' => 'viewer', 'guard_name' => 'web'],
-            ['id' => (string) Str::orderedUuid()]
-        );
+        // 3) Company roles (tenant-level)
+        $companyRoles = [
+            'company_owner' => ['auditlog.view', 'auditlog.create', 'auditlog.update', 'auditlog.delete', 'operations.*'],
+            'company_admin' => ['auditlog.view', 'operations.view', 'operations.create', 'operations.update'],
+            'hr_admin' => ['operations.view'],
+            'manager' => ['operations.view'],
+            'employee' => ['operations.view'],
+            'finance' => ['operations.view'],
+            'recruiter' => ['operations.view'],
+        ];
 
-        // Admin gets everything
-        $adminRole->givePermissionTo(Permission::all());
+        foreach ($companyRoles as $name => $perms) {
+            $role = Role::firstOrCreate(
+                ['name' => $name, 'guard_name' => 'web'],
+                [
+                    'id' => (string) Str::orderedUuid(),
+                    'role_scope' => 'company',
+                ]
+            );
 
-        // Editor
-        $editorRole->syncPermissions([
-            'auditlog.view',
-            'auditlog.create',
-            'auditlog.update',
-            'operations.view',
-            'operations.create',
-            'operations.update',
-        ]);
+            // Expand wildcard ops.* if present
+            $resolved = collect($perms)->flatMap(function ($p) {
+                if ($p === 'operations.*') {
+                    return ['operations.view', 'operations.create', 'operations.update', 'operations.delete'];
+                }
+                return [$p];
+            })->all();
 
-        // Viewer
-        $viewerRole->syncPermissions([
-            'auditlog.view',
-            'operations.view',
-        ]);
+            $role->syncPermissions($resolved);
+        }
 
         // 3) Seed users
 
