@@ -1,0 +1,549 @@
+You are an expert full-stack SaaS architect and engineer.
+Build a multi-tenant business platform using Laravel (backend API) and Vue 3 (SPA frontend).
+The first module is HR, but the platform must be modular so that more modules (e.g., Accounting) can be added later without rewriting core code.
+
+The app will be sold to many companies on a subscription basis.
+	•	Single shared database for all tenants.
+	•	Very strict tenant isolation, enforced in code.
+	•	Each Company can have multiple Operations (branches / business units / outlets).
+
+
+Basic Flow:
+Login->Select/Create Company->Select/Create Operation->Dashboard with links to Modules (HR, Accounting etc).
+
+The sidebar will automatically update based on the Module selected. 
+
+⸻
+
+0. Product Concept
+	•	Name: HR (platform name; can host non-HR modules as well).
+	•	Type: SaaS multi-tenant platform.
+	•	Modules:
+	•	Core Platform / SaaS Layer (multi-tenancy, subscriptions, companies, ops, users).
+	•	HR module (employees, attendance, leave, payroll, appraisals, etc.).
+	•	Future modules: Accounting, Inventory, POS, etc. (only stubs required now, but architecture must support them).
+    •	The source of truth will always be the backend.
+
+
+
+⸻
+
+1. Tech Stack & High-Level Architecture
+
+Backend (API)
+	•	PHP 8.2+
+	•	Laravel 11 (or latest LTS)
+	•	Database: MySQL or PostgreSQL (single DB, multi-tenant)
+	•	Auth: Laravel Sanctum (SPA + mobile)
+	•	Roles & Permissions: spatie/laravel-permission
+	•	Queues: jobs for notifications, heavy reports, scheduled tasks
+	•	Caching: Redis (or file) for config, permissions, dashboards
+	•	Testing: Pest or PHPUnit
+
+Frontend (Web SPA)
+	•	Vue 3 (Composition API) + Vite
+	•	Pinia for state
+	•	Vue Router 4
+	•	Tailwind CSS for styling
+	•	SPA that consumes JSON REST API from Laravel.
+
+Architecture style
+	•	Single DB multi-tenant: single schema with company_id (and often operation_id) on tenant-owned tables.
+	•	Logical / application-level isolation, not physical DB separation.
+	•	Modular monolith: each module (HR, Accounting, etc.) in its own namespace/folder with routes, controllers, services, migrations.
+
+⸻
+
+2. Multi-Tenancy Model (Very Important)
+
+2.1 Core multi-tenant entities
+
+Create these core tables/models:
+	•	companies
+	•	id, name, legal_name, tax_id, address, timezone, default_currency, status, created_at, updated_at.
+	•	operations
+	•	id, company_id, name, code, address, timezone (override), status, created_at, updated_at.
+	•	Represents a branch / outlet / separate operation under the same company.
+	•	users
+	•	Global users (can belong to multiple companies).
+	•	Pivot: company_user
+	•	user_id, company_id, default_operation_id, is_company_owner, status.
+	•	Optional pivot: operation_user
+	•	user_id, operation_id, role within that operation (if needed).
+
+2.2 Tenant scoping & security
+	•	NEVER trust company_id or operation_id from the client.
+Always derive currently active company/operation from:
+	•	Authenticated user’s memberships (company_user, operation_user).
+	•	Chosen company/operation stored in session / token.
+	•	Implement a TenantContext service:
+	•	Holds current company_id and operation_id.
+	•	Set via middleware after authentication.
+	•	Provides helpers: TenantContext::company(), TenantContext::operation().
+	•	Implement global scopes or base model traits:
+	•	A trait like BelongsToCompany that automatically scopes queries by company_id.
+	•	All tenant-owned models (Employee, AttendanceRecord, Invoice, etc.) must use this trait.
+	•	Implement authorization policies:
+	•	Check that the record’s company_id matches TenantContext::company()->id.
+	•	Deny access if mismatched, even if the user has the role.
+	•	Provide a Platform Admin role (for internal staff) that can access multiple companies:
+	•	But still via explicit context switching, never mixing data.
+
+⸻
+
+3. SaaS Subscriptions & Billing
+
+Implement basic subscription & plan logic so the platform can be sold to multiple companies.
+
+3.1 Plans & Modules
+	•	plans
+	•	name, code, price_monthly, price_yearly, max_users, max_operations, description.
+	•	JSON field included_modules (e.g. ["hr", "accounting"]).
+	•	company_subscriptions
+	•	company_id, plan_id, status (trialing, active, past_due, cancelled),
+billing_cycle (monthly/yearly), trial_ends_at, current_period_start, current_period_end, next_billing_at.
+	•	modules
+	•	code (e.g., hr, accounting), name, description, is_core, is_active.
+	•	company_modules (pivot)
+	•	company_id, module_id, enabled (bool), metadata.
+
+Logic:
+	•	When a company signs up or is created by platform admin:
+	•	Assign a subscription and corresponding company_modules based on selected plan.
+	•	For each request, check:
+	•	Company subscription is active.
+	•	Module is enabled for the company (e.g., HR).
+
+3.2 Billing integration (v1)
+	•	Code should be structured to later integrate Stripe (or other gateway):
+	•	Add placeholder service class BillingService with methods:
+	•	createCustomerForCompany(company)
+	•	createSubscription(company, plan)
+	•	handleWebhook() etc.
+	•	For now, implement subscription state changes in DB and stub gateway integration.
+
+3.3 Company signup / onboarding
+
+Backend:
+	•	Public endpoint for company signup:
+	•	Creates company, first operation, owner user, company_user record.
+	•	Creates company_subscription in trial state.
+
+Frontend:
+	•	Simple landing / signup flow:
+	•	Step 1: Company details.
+	•	Step 2: Owner details.
+	•	Step 3: Choose plan (just store in DB; payment can be manual for now).
+
+⸻
+
+4. Roles & Permissions (Platform vs Company)
+
+Use spatie/laravel-permission with two layers:
+	1.	Platform roles (global)
+	•	platform_admin, support_agent (if needed).
+	2.	Company roles (per-tenant)
+	•	company_owner
+	•	company_admin
+	•	hr_admin
+	•	manager
+	•	employee
+	•	finance
+	•	recruiter
+
+Store company-level roles and permissions in a company-aware way:
+	•	Create a role_scope column or separate guard for tenant roles.
+	•	Or have roles tied to company_id when they are tenant-specific.
+
+Permission examples:
+	•	hr.view_employees, hr.manage_employees, hr.approve_leave
+	•	accounting.view_ledgers, accounting.post_journal
+	•	settings.manage_company, billing.manage_subscription
+
+Frontend:
+	•	In Vue, store the user’s roles/permissions in Pinia after login.
+	•	Provide helpers like can('hr.view_employees') and hasRole('hr_admin').
+	•	Use route meta to guard routes.
+
+⸻
+
+5. Company & Operations Structure
+
+Companies:
+	•	Own all tenant data.
+	•	Have many operations.
+
+Operations:
+	•	Represent separate business units: branches, outlets, factories, etc.
+	•	Many HR/Accounting records may be tied to a specific operation.
+
+Data model tips:
+	•	On HR entities (e.g. Employee, AttendanceRecord), include:
+	•	company_id (required)
+	•	operation_id (optional but recommended)
+	•	On Accounting entities (later):
+	•	company_id and possibly operation_id for multi-branch accounting.
+
+Frontend:
+	•	Provide a company switcher (for users in multiple companies).
+	•	Provide an operation switcher in the header for multi-operation companies.
+	•	These values are used by the API to set TenantContext.
+
+⸻
+
+6. Module System (HR now, extensible later)
+
+Implement a simple internal module registration system:
+	•	Each module (HR, Accounting, etc.) has:
+	•	A service provider (e.g., App\Modules\HR\HRServiceProvider).
+	•	Its own routes file with route prefixes (/api/v1/hr/...).
+	•	Its own controllers, models, services, policies, tests.
+	•	Its own migrations (namespaced or tagged).
+	•	A central registry (e.g., config file config/modules.php):
+
+
+    return [
+    'hr' => [
+        'name' => 'Human Resources',
+        'enabled' => true,
+        'service_provider' => App\Modules\HR\HRServiceProvider::class,
+    ],
+    'accounting' => [
+        'name' => 'Accounting',
+        'enabled' => true,
+        'service_provider' => App\Modules\Accounting\AccountingServiceProvider::class,
+    ],
+];
+
+	•	When booting the app, register only modules that are:
+	•	Globally enabled in config and
+	•	Enabled for the current company via company_modules.
+
+Frontend:
+	•	Build sidebar menu dynamically from a Vue-side module registry that checks:
+	•	User permissions.
+	•	Company’s enabled modules.
+
+⸻
+
+7. HR Module (First Module to Implement)
+
+Implement HR as the first module, using the earlier detailed spec (employees, attendance, leave, payroll, appraisals, recruitment, disciplinary, overtime, approvals, reports, tasks).
+
+Key points adapted to multi-tenancy:
+	•	All HR tables must include company_id and often operation_id.
+	•	All HR APIs must:
+	•	Scope queries by TenantContext::company() (and operation where relevant).
+	•	Enforce permissions using policies and spatie/laravel-permission.
+	•	Frontend HR pages:
+	•	Only show data belonging to current company/operation.
+	•	Respect module and subscription limits (e.g., max users).
+
+(Use the HR spec you already have for the detailed fields and logic, but align everything with this multi-tenant design.)
+
+⸻
+
+8. Placeholder for Future Modules (e.g., Accounting)
+
+Don’t fully implement Accounting yet, but prepare the structure:
+	•	Create an Accounting module skeleton:
+	•	Service provider.
+	•	Routes file (/api/v1/accounting/...).
+	•	Basic entities:
+	•	ledgers, accounts, journal_entries, invoices (minimal).
+	•	All with company_id and optional operation_id.
+	•	Stub Vue views:
+	•	Simple placeholder routes and pages like “Accounting Home” so we can confirm routing and module toggling works.
+	•	Ensure:
+	•	Module appears in sidebar only if:
+	•	Company’s plan includes accounting, and
+	•	company_modules shows it enabled, and
+	•	User has the relevant permissions.
+
+⸻
+
+9. API & Frontend Structure
+
+Backend REST API:
+	•	Prefix: /api/v1/...
+	•	Auth endpoints:
+	•	/auth/login, /auth/logout, /auth/me, /auth/switch-company, /auth/switch-operation.
+	•	Platform admin endpoints:
+	•	Manage companies, operations, plans, subscriptions, modules.
+	•	Company-level endpoints (scoped by TenantContext):
+	•	/hr/... for HR module.
+	•	/accounting/... (placeholder).
+
+Frontend (Vue SPA):
+	•	Layout:
+	•	Top bar: company & operation switchers, notifications, profile.
+	•	Sidebar: dynamic menu based on modules + permissions.
+	•	Route grouping:
+	•	/hr/... HR pages.
+	•	/accounting/... Accounting pages (placeholder).
+	•	/settings/company, /settings/subscription for company admins.
+	•	/platform/companies, /platform/plans for platform admins only.
+
+⸻
+
+10. Non-Functional & Security Requirements
+	•	All tenant-owned data must be scoped by company_id at the query level.
+	•	Use Laravel Policies + gates for every important model.
+	•	Implement an audit log:
+	•	audit_logs table with: actor_user_id, company_id, operation_id, action, model_type, model_id, old_values, new_values, ip, user_agent, created_at.
+	•	Log key events: employee creation, payroll runs, subscription changes, etc.
+	•	Rate limit login and sensitive APIs.
+	•	Logging & error handling:
+	•	Use structured logs.
+	•	Performance:
+	•	Index all foreign keys: company_id, operation_id, user_id.
+	•	Use pagination everywhere for list endpoints.
+
+⸻
+
+11. Deliverables
+	•	Complete Laravel project:
+	•	Multi-tenant core (companies, operations, subscriptions, module toggling).
+	•	Fully working HR module integrated into this multi-tenant architecture.
+	•	Skeleton Accounting module to prove modularity.
+	•	Migrations, factories/seeders for sample data (plans, modules, companies, HR sample data).
+	•	Complete Vue 3 SPA:
+	•	Auth flows + company/operation switching.
+	•	Role-based & module-based sidebar and routes.
+	•	Full HR UI, Accounting placeholder UI.
+	•	Tests:
+	•	Verify tenant scoping (user from Company A cannot see Company B’s data).
+	•	Basic tests for subscription/module enforcement.
+	•	Business logic tests for key HR flows (leave, payroll, etc.).
+	•	README:
+	•	How to set up, migrate, seed, run queues, and build frontend.
+	•	Explanation of the multi-tenant approach and how to add new modules.
+
+
+    This ERP is to be used in Maldives.
+
+
+    Detailed scope of HR App:
+
+    1. High-Level Overview
+	•	Build a complete HR solution to manage:
+	•	Employees & employee lifecycle
+	•	Attendance & shifts
+	•	Leave
+	•	Payroll
+	•	Appraisals (performance management)
+	•	Recruitment
+	•	Disciplinary actions
+	•	Overtime
+	•	Approvals & workflows
+	•	Company settings & policies
+	•	Reports & analytics
+	•	Tasks & internal HR projects
+	•	Companion mobile app for employees & managers ￼
+	•	The system must support small startups to large enterprises (multi-department, multi-branch). ￼
+
+
+2. User Roles & Permissions
+
+Implement role-based access control:
+	•	HR Admin
+	•	Manage employees, attendance, leave policies, payroll, appraisals, recruitment, disciplinary, reports.
+	•	Manager / Supervisor
+	•	View team, approve/reject leave, overtime, attendance corrections, appraisals, tasks.
+	•	Employee
+	•	Self-service (profile, documents, leave requests, attendance, payroll slips, appraisals feedback, tasks).
+	•	Finance/Payroll Officer
+	•	Access payroll, bank files, allowances, deductions.
+	•	Recruiter
+	•	Manage job postings, candidates, interviews.
+
+Allow fine-grained permissions at module and action level (view/create/update/delete, approve, export).
+
+3. Core Modules & Detailed Features
+
+3.1 Employee Module
+	•	Central Employee Directory with search, filters (department, branch, status, role).
+	•	Employee profile fields:
+	•	Personal: name, gender, DOB, contact details, address, emergency contact.
+	•	Job: employee ID, department, section, designation, grade, manager, joining date, status (active, probation, terminated, resigned).
+	•	Compensation: salary components, allowances, benefits, bank accounts.
+	•	Documents: ID cards, contracts, certificates, visas/permits, etc.
+	•	Organizational structure:
+	•	Departments, sections, teams.
+	•	Ability to delegate tasks at both section and department levels. ￼
+	•	Employee Dashboard:
+	•	Summary of key info: attendance alerts, pending approvals, leave balance, upcoming appraisals, important dates. ￼
+	•	Allowances Management:
+	•	Activate/deactivate employee-specific allowances.
+	•	Create company-wide allowances, regular and special bonuses. ￼
+	•	Promotion / Demotion:
+	•	Change grade/position with effective date.
+	•	Optional multi-level approval workflow.
+	•	Termination / Exit:
+	•	Temporary blocking (suspension) or permanent termination with reasons.
+	•	Track notice period, last working day, exit checklist.
+	•	Employee Financing:
+	•	Track loans/advances, repayment schedules, necessary documents (for banks/retailers). ￼
+	•	Employee Documentation:
+	•	Document repository per employee.
+	•	Template-based generation of common letters (employment, salary, NOC).
+	•	Employee Self-Service:
+	•	Employees can update limited profile info, view docs, request changes. ￼
+
+3.2 Attendance Module
+	•	Integrate with attendance & door access devices (e.g., biometric terminals, card readers). ￼
+	•	Automatically import in/out logs and map to employees.
+	•	Attendance rules: grace time, late mark thresholds, half-day rules, overtime triggers.
+	•	Easy Approvals:
+	•	Allow managers/HR to approve corrections (missing punch, work from home, offsite duty). ￼
+	•	Shift Management:
+	•	Create shifts (morning, evening, night), rotating shifts, recurring schedules.
+	•	Temporary overrides for special days. ￼
+	•	Work From Anywhere / Remote Work:
+	•	Flag employee as remote/WFH.
+	•	Support location tagging or IP/device-based rules for remote attendance. ￼
+
+3.3 Leave Module
+	•	Configurable leave types (annual, sick, casual, maternity, unpaid, etc.) with custom rules. ￼
+	•	Eligibility criteria, accrual frequency, max days, carry-forward, encashment.
+	•	Policy rules:
+	•	Maximum consecutive days, blackout dates, notice periods, required attachments.
+	•	Self-Service Leave Application:
+	•	Employees apply via web/mobile, attach documents, see balance. ￼
+	•	Approval Workflow:
+	•	Multi-level approvals based on org structure (e.g., manager → HR).
+	•	Leave Calendar / Overview:
+	•	Timeline view showing who is on leave by day/week/month for each team. ￼
+	•	Leave Accumulation & Carry Forward:
+	•	Automate carry-forward as per policy.
+	•	Enable payout of unused leave.
+
+3.4 Payroll Module
+	•	Fully automated payroll engine:
+	•	Base salary + allowances + overtime + bonuses – deductions (tax, loans, penalties). ￼
+	•	Input from attendance, leaves, company schemes, holidays.
+	•	Automatic Calculations:
+	•	Salary for joining/leaving mid-month.
+	•	Overtime pay per rules.
+	•	Pro-rated allowances.
+	•	Payroll Run:
+	•	Select pay period and “salary day” → system computes payroll instantly. ￼
+	•	Support draft/finalized states.
+	•	Multi-Bank Support:
+	•	Generate bank-wise salary transfer files using preset templates for common banks. ￼
+	•	Employee Self-Service:
+	•	Employees can view/download their payslips anytime. ￼
+	•	Security:
+	•	Strong encryption for payroll data, multi-factor authentication for payroll users. ￼
+
+3.5 Appraisal (Performance) Module
+	•	Customizable appraisal templates (different by role/grade). ￼
+	•	Support 360° feedback:
+	•	Manager, peers, subordinates, self-review. ￼
+	•	Goal Setting & Tracking:
+	•	Define yearly/quarterly goals per employee.
+	•	Track progress and updates throughout the cycle. ￼
+	•	Performance Metrics:
+	•	Productivity, attendance, quality of work and custom KPIs. ￼
+	•	Performance History:
+	•	Timeline of past appraisals, ratings, salary changes and promotions. ￼
+
+3.6 Recruitment Module
+	•	Job Postings:
+	•	Create positions, define description, requirements, location, salary range. ￼
+	•	Publish to internal portal (and optionally external career site).
+	•	Applicant Tracking:
+	•	Store resumes, cover letters, application forms. ￼
+	•	Candidate pipeline stages (applied, shortlisted, interviewed, offered, hired, rejected).
+	•	Interview Scheduling:
+	•	Schedule interviews, send automated invitations and reminders. ￼
+	•	Candidate Evaluation:
+	•	Scorecards, notes, skills tests, background checks, reference checks. ￼
+	•	Recruitment Analytics:
+	•	Time to hire, source effectiveness, offer acceptance rate. ￼
+
+3.7 Disciplinary Module
+	•	Policy Enforcement:
+	•	Store and present company policies; require employees to acknowledge. ￼
+	•	Incident Reporting:
+	•	Both employees and managers can file incident reports. ￼
+	•	Attach evidence, witnesses, dates, location.
+	•	Case Management:
+	•	Track investigations, meetings, outcomes.
+	•	Disciplinary Actions:
+	•	Warnings, suspensions, PIP (performance improvement plans), terminations. ￼
+	•	Maintain historical record linked to employee.
+
+3.8 Shift Management Module
+	•	Shift Scheduling:
+	•	Create schedules for teams with shifts, breaks, and days off. ￼
+	•	Automated Scheduling:
+	•	Auto-assign shifts based on availability, skills, and preferences. ￼
+	•	Shift Swapping:
+	•	Employees can request swaps; managers approve to ensure coverage. ￼
+	•	Connect shifts to time & attendance and payroll. ￼
+
+3.9 Overtime Module
+	•	Overtime Tracking:
+	•	Calculate overtime hours based on attendance vs. schedule. ￼
+	•	Pre-Overtime Requests:
+	•	Employees request planned overtime; managers approve in advance. ￼
+	•	Automated Calculation:
+	•	Apply company policies and local regulations to compute overtime pay. ￼
+	•	Approval Workflow:
+	•	Multi-level approvals for overtime and pre-overtime. ￼
+
+3.10 Approval Module
+	•	Generic approval engine used by leave, overtime, attendance corrections, expenses, etc. ￼
+	•	Customizable Workflows:
+	•	Define steps, approvers, conditions (amount thresholds, departments). ￼
+	•	Automated Notifications:
+	•	Push + email + in-app notifications for new, pending, approved, rejected items. ￼
+	•	Mobile Approvals:
+	•	Approvers can review and act via mobile app. ￼
+
+
+3.12 Reports & Analytics Module
+	•	Customisable Reports:
+	•	Prebuilt and custom reports for attendance, leave, payroll, overtime, headcount, turnover. ￼
+	•	Real-Time Data:
+	•	Reports should reflect latest HR data. ￼
+	•	Analytics Dashboards:
+	•	Charts and graphs for trends and KPIs (absenteeism, overtime costs, leave usage, performance scores). ￼
+	•	Filtering & Sorting:
+	•	By department, date range, location, status, etc. ￼
+	•	Scheduled Reports:
+	•	Email/export reports at set intervals (daily/weekly/monthly) to specified recipients. ￼
+
+
+
+
+4. Non-Functional Requirements
+	•	Performance:
+	•	Must support hundreds of concurrent users with responsive UI (page loads < 2–3 seconds under normal load).
+	•	Security & Compliance:
+	•	Encrypt data at rest and in transit.
+	•	Role-based access; audit trail for critical actions (payroll changes, approvals, disciplinary actions).
+	•	Scalability:
+	•	Design database and architecture to support multi-tenant usage (multiple companies) in the future.
+	•	Internationalisation:
+	•	Support multiple currencies and local labor/overtime rules via configurable settings.
+	•	Logging & Auditing:
+	•	System logs for key events; exportable audit reports.
+
+5. UX & Navigation
+	•	Main navigation by modules: Dashboard, Employee, Attendance, Leave, Payroll, Appraisal, Recruitment, Disciplinary, Shifts, Overtime, Approvals, Settings, Reports, Tasks.
+	•	Provide role-based dashboards:
+	•	HR: metrics & shortcuts for HR operations.
+	•	Manager: team overview, pending approvals, alerts.
+	•	Employee: personal info, upcoming leaves, attendance summary, recent payslips.
+	•	Use consistent table views with filters, export (CSV/PDF), and bulk actions where applicable.
+
+6. Output
+	•	Design:
+	•	Full ERD-level data model (tables & relationships).
+	•	API specification for each module (CRUD + workflows).
+	•	UI wireframes or component descriptions for key pages.
+	•	Implementation:
+	•	Generate production-ready backend and frontend code, database migrations, and basic seed data.
+	•	Include unit tests for critical business logic (payroll, leave, overtime calculations).
