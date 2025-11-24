@@ -4,6 +4,7 @@ namespace App\Models\Traits;
 
 use App\Jobs\StoreAuditLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 
 trait Auditable
@@ -101,19 +102,28 @@ trait Auditable
         $companyId = $this->company_id ?? currentCompanyId();
         $operationId = $this->operation_id ?? currentOperationId();
 
-        StoreAuditLog::dispatch(
-            userId: $user?->id,
-            companyId: $companyId,
-            operationId: $operationId,
-            action: $action,
-            auditableType: static::class,
-            auditableId: (string) $this->getKey(),
-            oldValues: $oldValues,
-            newValues: $newValues,
-            ipAddress: $request?->ip(),
-            userAgent: $request?->userAgent(),
-            url: $request?->fullUrl(),
-        );
+        try {
+            StoreAuditLog::dispatch(
+                userId: $user?->id,
+                companyId: $companyId,
+                operationId: $operationId,
+                action: $action,
+                auditableType: static::class,
+                auditableId: (string) $this->getKey(),
+                oldValues: $oldValues,
+                newValues: $newValues,
+                ipAddress: $request?->ip(),
+                userAgent: $request?->userAgent(),
+                url: $request?->fullUrl(),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to queue audit log', [
+                'action' => $action,
+                'model' => static::class,
+                'id' => $this->getKey(),
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

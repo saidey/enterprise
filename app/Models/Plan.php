@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
 
 class Plan extends Model
 {
     use UsesOrderedUuid;
+    use Auditable;
 
     protected $fillable = [
         'code',

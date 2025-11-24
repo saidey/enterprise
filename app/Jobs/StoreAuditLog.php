@@ -16,6 +16,7 @@ class StoreAuditLog implements ShouldQueue
     public function __construct(
         public ?string $userId,
         public ?string $companyId,
+        public ?string $operationId,
         public string $action,
         public string $auditableType,
         public string $auditableId,
@@ -31,6 +32,7 @@ class StoreAuditLog implements ShouldQueue
         AuditLog::create([
             'user_id' => $this->userId,
             'company_id' => $this->companyId,
+            'operation_id' => $this->operationId,
             'action' => $this->action,
             'auditable_type' => $this->auditableType,
             'auditable_id' => $this->auditableId,

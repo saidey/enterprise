@@ -2,6 +2,7 @@
 
 namespace App\Models\Company;
 
+use App\Models\Traits\Auditable;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +11,7 @@ class CompanyModule extends Model
 {
     use UsesOrderedUuid;
     use BelongsToCompany;
+    use Auditable;
 
     protected $table = 'company_modules';
 

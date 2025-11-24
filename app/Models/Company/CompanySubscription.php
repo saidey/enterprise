@@ -3,6 +3,7 @@
 namespace App\Models\Company;
 
 use App\Models\Plan;
+use App\Models\Traits\Auditable;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,7 @@ class CompanySubscription extends Model
 {
     use UsesOrderedUuid;
     use BelongsToCompany;
+    use Auditable;
 
     protected $table = 'company_subscriptions';
 
