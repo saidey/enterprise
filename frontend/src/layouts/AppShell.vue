@@ -330,6 +330,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { logoutRequest } from '../api'
 import { resetCachedUser } from '../router'
 import { useSession } from '../composables/useSession'
+import { moduleRegistry } from '../constants/modules'
 
 import {
   Dialog,
@@ -397,12 +398,20 @@ const currentAppLabel = computed(() => {
  * Dynamic sidebar navigation based on current app.
  * Fallback to generic navigation if no app is selected.
  */
+const canUseModule = (key) => {
+  const enabledCodes = new Set((modules.value || []).map((m) => m.code))
+  const mod = moduleRegistry.find((m) => m.key === key)
+  if (!mod) return false
+  if (mod.requiredModuleCode && !enabledCodes.has(mod.requiredModuleCode)) return false
+  if (mod.requiredPermission && !hasPermission(mod.requiredPermission)) return false
+  return true
+}
+
 const navigation = computed(() => {
   const app = currentApp.value
-  const enabledModules = new Set((modules.value || []).map((m) => m.code))
 
   if (app === 'hr') {
-    if (!enabledModules.has('hr')) {
+    if (!canUseModule('hr')) {
       return [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
     }
     return [
@@ -414,7 +423,7 @@ const navigation = computed(() => {
   }
 
   if (app === 'accounting') {
-    if (!enabledModules.has('accounting')) {
+    if (!canUseModule('accounting')) {
       return [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
     }
     return [
@@ -438,13 +447,15 @@ const navigation = computed(() => {
   // Default / launcher navigation
   const items = [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
 
-  if (enabledModules.has('hr')) {
-    items.push({ name: 'HR', to: '/apps/hr', icon: DocumentDuplicateIcon })
-  }
-  if (enabledModules.has('accounting')) {
-    items.push({ name: 'Accounting', to: '/apps/accounting', icon: DocumentDuplicateIcon })
-  }
-  items.push({ name: 'Admin', to: '/admin', icon: Cog6ToothIcon })
+  moduleRegistry.forEach((mod) => {
+    if (mod.key === 'admin') {
+      items.push({ name: mod.name, to: mod.route, icon: Cog6ToothIcon })
+      return
+    }
+    if (canUseModule(mod.key)) {
+      items.push({ name: mod.name, to: mod.route, icon: DocumentDuplicateIcon })
+    }
+  })
 
   return items
 })

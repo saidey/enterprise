@@ -26,16 +26,21 @@ class HrEmployeeTest extends TestCase
             ['code' => 'pro'],
             ['name' => 'Pro', 'included_modules' => ['hr'], 'is_active' => true]
         );
+        // Give test users HR manage permission
+        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
     }
 
     public function test_can_create_employee_with_custom_id_and_link_user(): void
     {
+        $this->withoutExceptionHandling();
         $this->seedModule();
 
         $user = User::factory()->create(['email' => 'creator@example.com']);
         $existingUser = User::factory()->create(['email' => 'target@example.com']);
         $company = $this->makeCompany('Alpha Co');
         $company->users()->attach($user->id, ['role' => 'member', 'is_owner' => false, 'is_default' => true]);
+        $company->users()->attach($existingUser->id, ['role' => 'member', 'is_owner' => false, 'is_default' => false]);
+        $user->assignRole('hr_admin');
 
         $department = Department::create([
             'company_id' => $company->id,
@@ -53,7 +58,7 @@ class HrEmployeeTest extends TestCase
 
         $res = $this->actingAs($user)
             ->withSession(['current_company_id' => $company->id])
-            ->postJson('/api/hr/employees', $payload);
+            ->postJson('/api/v1/hr/employees', $payload);
 
         $res->assertCreated();
         $res->assertJsonFragment(['employee_id' => 'EMP-001', 'name' => 'John Doe']);
@@ -72,6 +77,7 @@ class HrEmployeeTest extends TestCase
         $user = User::factory()->create();
         $company = $this->makeCompany('Alpha Co');
         $company->users()->attach($user->id, ['role' => 'member', 'is_owner' => false, 'is_default' => true]);
+        $user->assignRole('hr_admin');
 
         Employee::create([
             'company_id' => $company->id,
@@ -87,7 +93,7 @@ class HrEmployeeTest extends TestCase
 
         $res = $this->actingAs($user)
             ->withSession(['current_company_id' => $company->id])
-            ->getJson('/api/hr/employees');
+            ->getJson('/api/v1/hr/employees');
 
         $res->assertOk();
         $res->assertJsonFragment(['name' => 'Alice']);

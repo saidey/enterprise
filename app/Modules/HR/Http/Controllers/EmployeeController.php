@@ -14,6 +14,8 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', \App\Modules\HR\Models\Employee::class);
+
         $company = currentCompany();
         abort_unless($company, 428, 'No company selected.');
 
@@ -49,6 +51,8 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', \App\Modules\HR\Models\Employee::class);
+
         $company = currentCompany();
         abort_unless($company, 428, 'No company selected.');
 
@@ -86,6 +90,8 @@ class EmployeeController extends Controller
 
     public function assignUser(Request $request, Employee $employee)
     {
+        $this->authorize('update', $employee);
+
         $company = currentCompany();
         abort_unless($company, 428, 'No company selected.');
         abort_unless($employee->company_id === $company->id, 403, 'Employee not in this company.');

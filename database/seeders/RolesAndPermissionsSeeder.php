@@ -29,6 +29,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'operations.update',
             'operations.delete',
 
+            // HR
+            'hr.view_employees',
+            'hr.manage_employees',
+            'hr.view_attendance',
+            'hr.manage_attendance',
+            'hr.view_leave',
+            'hr.manage_leave',
+
             // User / permission management
             'users.manage_permissions',
         ];
@@ -66,13 +74,13 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // 3) Company roles (tenant-level)
         $companyRoles = [
-            'company_owner' => ['auditlog.view', 'auditlog.create', 'auditlog.update', 'auditlog.delete', 'operations.*'],
-            'company_admin' => ['auditlog.view', 'operations.view', 'operations.create', 'operations.update'],
-            'hr_admin' => ['operations.view'],
-            'manager' => ['operations.view'],
-            'employee' => ['operations.view'],
-            'finance' => ['operations.view'],
-            'recruiter' => ['operations.view'],
+            'company_owner' => ['auditlog.view', 'auditlog.create', 'auditlog.update', 'auditlog.delete', 'operations.*', 'hr.*'],
+            'company_admin' => ['auditlog.view', 'operations.view', 'operations.create', 'operations.update', 'hr.view_employees', 'hr.manage_employees'],
+            'hr_admin' => ['hr.view_employees', 'hr.manage_employees', 'hr.view_attendance', 'hr.manage_attendance', 'hr.view_leave', 'hr.manage_leave'],
+            'manager' => ['hr.view_employees', 'hr.view_attendance', 'hr.view_leave'],
+            'employee' => ['hr.view_employees'],
+            'finance' => ['hr.view_employees'],
+            'recruiter' => ['hr.view_employees'],
         ];
 
         foreach ($companyRoles as $name => $perms) {
@@ -84,10 +92,20 @@ class RolesAndPermissionsSeeder extends Seeder
                 ]
             );
 
-            // Expand wildcard ops.* if present
+            // Expand wildcard ops.* or hr.* if present
             $resolved = collect($perms)->flatMap(function ($p) {
                 if ($p === 'operations.*') {
                     return ['operations.view', 'operations.create', 'operations.update', 'operations.delete'];
+                }
+                if ($p === 'hr.*') {
+                    return [
+                        'hr.view_employees',
+                        'hr.manage_employees',
+                        'hr.view_attendance',
+                        'hr.manage_attendance',
+                        'hr.view_leave',
+                        'hr.manage_leave',
+                    ];
                 }
                 return [$p];
             })->all();

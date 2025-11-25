@@ -46,18 +46,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/audit/logs', [AuditLogController::class, 'index']);
         Route::get('/audit/logs/actions', [AuditLogController::class, 'actions']);
         Route::get('/audit/logs/{log}', [AuditLogController::class, 'show']);
-
-        // HR
-        Route::middleware('module:hr')->prefix('hr')->group(function () {
-            Route::get('/departments/tree', [DepartmentController::class, 'tree']);
-            Route::post('/departments', [DepartmentController::class, 'store']);
-            Route::put('/departments/{department}', [DepartmentController::class, 'update']);
-            Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
-
-            Route::get('/employees', [EmployeeController::class, 'index']);
-            Route::post('/employees', [EmployeeController::class, 'store']);
-            Route::post('/employees/{employee}/assign-user', [EmployeeController::class, 'assignUser']);
-        });
     });
 
     // Company & session

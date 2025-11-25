@@ -7,6 +7,8 @@ import axios from 'axios'
 const api = axios.create({
     baseURL: 'http://api.enterprise.test',
     withCredentials: true,
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
 })
 
 /* ============================================================================
@@ -21,13 +23,32 @@ function getCookie(name) {
     return null
 }
 
-// attach X-XSRF-TOKEN for mutating requests
-api.interceptors.request.use((config) => {
-    const rawToken = getCookie('XSRF-TOKEN')
-    const xsrfToken = rawToken ? decodeURIComponent(rawToken) : null
+// ensure CSRF cookie is present for mutating requests
+let csrfReady = null
+const ensureCsrfCookie = () => {
+    if (csrfReady) return csrfReady
+    csrfReady = api.get('/sanctum/csrf-cookie').catch((err) => {
+        csrfReady = null
+        throw err
+    })
+    return csrfReady
+}
 
-    if (xsrfToken && ['post', 'put', 'patch', 'delete'].includes(config.method)) {
-        config.headers['X-XSRF-TOKEN'] = xsrfToken
+// attach X-XSRF-TOKEN for mutating requests and lazily fetch CSRF cookie
+api.interceptors.request.use(async (config) => {
+    const method = (config.method || '').toLowerCase()
+
+    if (['post', 'put', 'patch', 'delete'].includes(method)) {
+        let rawToken = getCookie('XSRF-TOKEN')
+        if (!rawToken) {
+            await ensureCsrfCookie()
+            rawToken = getCookie('XSRF-TOKEN')
+        }
+
+        const xsrfToken = rawToken ? decodeURIComponent(rawToken) : null
+        if (xsrfToken) {
+            config.headers['X-XSRF-TOKEN'] = xsrfToken
+        }
     }
 
     return config
@@ -180,19 +201,19 @@ export function fetchEnabledModules() {
  * ========================================================================== */
 
 export function fetchDepartmentTree() {
-    return api.get('/api/hr/departments/tree')
+    return api.get('/api/v1/hr/departments/tree')
 }
 
 export function fetchEmployees(params = {}) {
-    return api.get('/api/hr/employees', { params })
+    return api.get('/api/v1/hr/employees', { params })
 }
 
 export function createEmployee(payload) {
-    return api.post('/api/hr/employees', payload)
+    return api.post('/api/v1/hr/employees', payload)
 }
 
 export function assignEmployeeToUser(employeeId, userEmail) {
-    return api.post(`/api/hr/employees/${employeeId}/assign-user`, {
+    return api.post(`/api/v1/hr/employees/${employeeId}/assign-user`, {
         user_email: userEmail,
     })
 }

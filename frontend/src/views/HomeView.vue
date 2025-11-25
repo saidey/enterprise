@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AppShell from '../layouts/AppShell.vue'
 import { useSession } from '../composables/useSession'
+import { moduleRegistry } from '../constants/modules'
 
 const router = useRouter()
 const { setCurrentApp, currentCompany, currentOperation, modules } = useSession()
@@ -12,40 +13,23 @@ const contextLabel = computed(() => {
   return `${currentCompany.value.name} / ${currentOperation.value.name}`
 })
 
-const availableApps = computed(() => {
+const canUseModule = (mod) => {
   const enabled = new Set((modules.value || []).map((m) => m.code))
+  if (mod.requiredModuleCode && !enabled.has(mod.requiredModuleCode)) return false
+  // If you wire permissions into session, check here as well
+  return true
+}
 
-  const base = []
-
-  if (enabled.has('hr')) {
-    base.push({
-      key: 'hr',
-      name: 'HR',
-      description: 'Manage employees, leave, and people operations.',
-      to: '/apps/hr',
-      badge: 'People',
-    })
-  }
-
-  if (enabled.has('accounting')) {
-    base.push({
-      key: 'accounting',
-      name: 'Accounting',
-      description: 'Journals, ledgers, and finance reporting.',
-      to: '/apps/accounting',
-      badge: 'Finance',
-    })
-  }
-
-  base.push({
-    key: 'admin',
-    name: 'Admin',
-    description: 'Permissions, audit logs, and organizational settings.',
-    to: '/admin',
-    badge: 'Admin',
-  })
-
-  return base
+const availableApps = computed(() => {
+  return moduleRegistry
+    .filter((mod) => mod.key === 'admin' || canUseModule(mod))
+    .map((mod) => ({
+      key: mod.key,
+      name: mod.name,
+      description: mod.description,
+      to: mod.route,
+      badge: mod.badge,
+    }))
 })
 
 const handleSelectApp = (app) => {
