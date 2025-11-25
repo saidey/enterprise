@@ -3,21 +3,22 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\Company\Company;
+use App\Modules\Company\Models\Company;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use RuntimeException;
 use Spatie\Permission\Contracts\Role as SpatieRoleContract;
 use Spatie\Permission\Traits\HasRoles;
-use RuntimeException;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use Auditable, HasApiTokens, HasFactory, Notifiable, UsesOrderedUuid;
+
     use HasRoles {
         assignRole as protected traitAssignRole;
         syncRoles as protected traitSyncRoles;

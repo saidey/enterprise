@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Company\Company;
-use App\Models\Company\CompanyModule;
-use App\Models\Company\CompanySubscription;
+use App\Modules\Company\Models\Company;
+use App\Modules\Company\Models\CompanyModule;
+use App\Modules\Company\Models\CompanySubscription;
 use App\Models\Module;
 use App\Models\Plan;
 use App\Models\User;

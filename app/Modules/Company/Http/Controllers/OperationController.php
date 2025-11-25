@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Company;
+namespace App\Modules\Company\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Company\Operation;
+use App\Modules\Company\Models\Operation;
 use Illuminate\Http\Request;
 
 class OperationController extends Controller

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Company;
+namespace App\Modules\Company\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Company\Company;
+use App\Modules\Company\Models\Company;
 use Illuminate\Http\Request;
 
 class SessionCompanyController extends Controller

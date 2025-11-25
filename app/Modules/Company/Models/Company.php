@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Company;
+namespace App\Modules\Company\Models;
 
 use App\Models\Traits\UsesOrderedUuid;
 use App\Models\Traits\Auditable;

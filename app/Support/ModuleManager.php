@@ -2,7 +2,7 @@
 
 namespace App\Support;
 
-use App\Models\Company\Company;
+use App\Modules\Company\Models\Company;
 use App\Models\Module;
 use Illuminate\Support\Str;
 

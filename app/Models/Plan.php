@@ -30,6 +30,6 @@ class Plan extends Model
 
     public function subscriptions()
     {
-        return $this->hasMany(\App\Models\Company\CompanySubscription::class);
+        return $this->hasMany(\App\Modules\Company\Models\CompanySubscription::class);
     }
 }

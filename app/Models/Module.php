@@ -26,7 +26,7 @@ class Module extends Model
 
     public function companies()
     {
-        return $this->belongsToMany(\App\Models\Company\Company::class, 'company_modules')
+        return $this->belongsToMany(\App\Modules\Company\Models\Company::class, 'company_modules')
             ->withPivot(['enabled', 'metadata'])
             ->withTimestamps();
     }

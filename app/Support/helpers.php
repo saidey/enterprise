@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Company\Company;
-use App\Models\Company\Operation;
+use App\Modules\Company\Models\Company;
+use App\Modules\Company\Models\Operation;
 
 if (! function_exists('currentCompanyId')) {
     function currentCompanyId(): ?string

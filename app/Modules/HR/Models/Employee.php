@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models\Hr;
+namespace App\Modules\HR\Models;
 
-use App\Models\Company\Company;
+use App\Modules\Company\Models\Company;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid;

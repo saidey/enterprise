@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Hr;
+namespace App\Modules\HR\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Company\Company;
-use App\Models\Company\Operation;
-use App\Models\Hr\Department;
-use App\Models\Hr\Employee;
-use App\Models\Module;
+use App\Modules\Company\Models\Company;
 use App\Models\User;
+use App\Modules\HR\Models\Department;
+use App\Modules\HR\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 

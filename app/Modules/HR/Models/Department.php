@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Hr;
+namespace App\Modules\HR\Models;
 
 use App\Models\Traits\Auditable;
 use App\Models\Traits\BelongsToCompany;

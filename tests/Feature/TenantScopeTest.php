@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Company\Company;
-use App\Models\Company\Operation;
+use App\Modules\Company\Models\Company;
+use App\Modules\Company\Models\Operation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;

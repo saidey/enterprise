@@ -1,14 +1,15 @@
 <?php
 
-use App\Http\Controllers\Admin\UserPermissionController;
+use App\Modules\Admin\Http\Controllers\UserPermissionController;
 use App\Http\Controllers\Api\ProfileController;
-use App\Http\Controllers\Audit\AuditLogController;
-use App\Http\Controllers\Company\CompanyController;
-use App\Http\Controllers\Company\ModuleController;
-use App\Http\Controllers\Company\OperationController;
-use App\Http\Controllers\Company\SessionCompanyController;
-use App\Http\Controllers\Company\SessionOperationController;
-use App\Http\Controllers\Hr\DepartmentController;
+use App\Modules\Audit\Http\Controllers\AuditLogController;
+use App\Modules\Company\Http\Controllers\CompanyController;
+use App\Modules\Company\Http\Controllers\ModuleController;
+use App\Modules\Company\Http\Controllers\OperationController;
+use App\Modules\Company\Http\Controllers\SessionCompanyController;
+use App\Modules\Company\Http\Controllers\SessionOperationController;
+use App\Modules\HR\Http\Controllers\DepartmentController;
+use App\Modules\HR\Http\Controllers\EmployeeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,9 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/departments/{department}', [DepartmentController::class, 'update']);
             Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 
-            Route::get('/employees', [\App\Http\Controllers\Hr\EmployeeController::class, 'index']);
-            Route::post('/employees', [\App\Http\Controllers\Hr\EmployeeController::class, 'store']);
-            Route::post('/employees/{employee}/assign-user', [\App\Http\Controllers\Hr\EmployeeController::class, 'assignUser']);
+            Route::get('/employees', [EmployeeController::class, 'index']);
+            Route::post('/employees', [EmployeeController::class, 'store']);
+            Route::post('/employees/{employee}/assign-user', [EmployeeController::class, 'assignUser']);
         });
     });
 

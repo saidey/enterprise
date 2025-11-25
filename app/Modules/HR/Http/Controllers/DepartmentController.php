@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Hr;
+namespace App\Modules\HR\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Hr\Department;
+use App\Modules\HR\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 

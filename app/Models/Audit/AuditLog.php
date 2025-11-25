@@ -2,8 +2,8 @@
 
 namespace App\Models\Audit;
 
-use App\Models\Company\Company;
-use App\Models\Company\Operation;
+use App\Modules\Company\Models\Company;
+use App\Modules\Company\Models\Operation;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid; // if you're using ordered UUIDs
 use App\Models\User;

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Company\Company;
-use App\Models\Hr\Department;
-use App\Models\Hr\Employee;
 use App\Models\Module;
 use App\Models\Plan;
 use App\Models\User;
+use App\Modules\Company\Models\Company;
+use App\Modules\HR\Models\Department;
+use App\Modules\HR\Models\Employee;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
