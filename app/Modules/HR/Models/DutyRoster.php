@@ -28,6 +28,8 @@ class DutyRoster extends Model
     protected $casts = [
         'off_days' => 'array',
         'is_active' => 'boolean',
+        'starts_at' => 'string',
+        'ends_at' => 'string',
     ];
 
     public function assignments()

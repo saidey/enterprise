@@ -29,6 +29,8 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
         Route::get('/duty-rosters', [DutyRosterController::class, 'index']);
         Route::post('/duty-rosters', [DutyRosterController::class, 'store']);
         Route::post('/duty-rosters/{dutyRoster}/assign', [DutyRosterController::class, 'assign']);
+        Route::put('/duty-rosters/{dutyRoster}', [DutyRosterController::class, 'update']);
+        Route::delete('/duty-rosters/{dutyRoster}', [DutyRosterController::class, 'destroy']);
 
         // HR settings
         Route::get('/settings', [HrSettingsController::class, 'show']);

@@ -41,8 +41,8 @@ class DutyRosterController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'code' => ['nullable', 'string', 'max:50'],
-            'starts_at' => ['nullable', 'date_format:H:i'],
-            'ends_at' => ['nullable', 'date_format:H:i'],
+            'starts_at' => ['required', 'string'],
+            'ends_at' => ['required', 'string'],
             'off_days' => ['nullable', 'array'],
             'off_days.*' => ['integer', 'between:0,6'],
             'notes' => ['nullable', 'string'],
@@ -54,13 +54,16 @@ class DutyRosterController extends Controller
             ->values()
             ->all(); // 0 = Sunday, 6 = Saturday
 
+        $startsAt = $this->normalizeTime($request->input('starts_at'));
+        $endsAt = $this->normalizeTime($request->input('ends_at'));
+
         $roster = DutyRoster::create([
             'company_id' => $company->id,
             'operation_id' => currentOperationId(),
             'name' => $data['name'],
             'code' => $data['code'] ?? null,
-            'starts_at' => $data['starts_at'] ?? null,
-            'ends_at' => $data['ends_at'] ?? null,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
             'off_days' => $offDays,
             'notes' => $data['notes'] ?? null,
             'is_active' => true,
@@ -104,5 +107,88 @@ class DutyRosterController extends Controller
         }
 
         return response()->json(['message' => 'Roster assigned.']);
+    }
+
+    public function update(Request $request, DutyRoster $dutyRoster)
+    {
+        $this->authorize('create', Employee::class);
+
+        $company = currentCompany();
+        abort_unless($company, 428, 'No company selected.');
+        abort_unless($dutyRoster->company_id === $company->id, 403, 'Roster not in this company.');
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50'],
+            'starts_at' => ['required', 'string'],
+            'ends_at' => ['required', 'string'],
+            'off_days' => ['nullable', 'array'],
+            'off_days.*' => ['integer', 'between:0,6'],
+            'notes' => ['nullable', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $offDays = collect($data['off_days'] ?? [])
+            ->map(fn ($d) => (int) $d)
+            ->unique()
+            ->values()
+            ->all();
+
+        $startsAt = $this->normalizeTime($request->input('starts_at'));
+        $endsAt = $this->normalizeTime($request->input('ends_at'));
+
+        $dutyRoster->fill([
+            'operation_id' => currentOperationId() ?? $dutyRoster->operation_id,
+            'name' => $data['name'],
+            'code' => $data['code'] ?? null,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'off_days' => $offDays,
+            'notes' => $data['notes'] ?? null,
+            'is_active' => array_key_exists('is_active', $data) ? (bool) $data['is_active'] : $dutyRoster->is_active,
+        ]);
+
+        $dutyRoster->save();
+
+        return response()->json(['data' => $dutyRoster]);
+    }
+
+    public function destroy(DutyRoster $dutyRoster)
+    {
+        $this->authorize('create', Employee::class);
+
+        $company = currentCompany();
+        abort_unless($company, 428, 'No company selected.');
+        abort_unless($dutyRoster->company_id === $company->id, 403, 'Roster not in this company.');
+
+        $dutyRoster->delete();
+
+        return response()->json(['message' => 'Roster deleted.']);
+    }
+
+    private function normalizeTime($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if (preg_match('/^\d{2}:\d{2}$/', $value)) {
+            return $value . ':00';
+        }
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+            return $value;
+        }
+
+        try {
+            return Carbon::parse($value)->format('H:i:s');
+        } catch (\Throwable $e) {
+            if (preg_match('/^(\\d{2}:\\d{2}:\\d{2})/', $value, $m)) {
+                return $m[1];
+            }
+            // fallback to trimmed input to avoid dropping user-provided time
+            return $value;
+        }
     }
 }

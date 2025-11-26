@@ -3,6 +3,15 @@ import { ref, computed, onMounted, watch } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
 import CalendarMonth from '../components/CalendarMonth.vue'
 import { fetchAttendance, fetchAttendanceCalendar, fetchEmployees, createAttendance } from '../api'
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxLabel,
+  ComboboxOption,
+  ComboboxOptions,
+} from '@headlessui/vue'
+import { ChevronDownIcon } from '@heroicons/vue/20/solid'
 
 const employees = ref([])
 const attendanceList = ref([])
@@ -24,6 +33,25 @@ const attendanceForm = ref({
   notes: '',
   late_minutes: 0,
 })
+const employeeQuery = ref('')
+const selectedEmployee = computed({
+  get: () => employees.value.find((e) => e.id === attendanceForm.value.employee_id) || null,
+  set: (val) => {
+    attendanceForm.value.employee_id = val?.id || ''
+    employeeQuery.value = ''
+  },
+})
+const filteredEmployees = computed(() => {
+  const q = employeeQuery.value.toLowerCase()
+  if (!q) return employees.value
+  return employees.value.filter(
+    (e) =>
+      e.name?.toLowerCase().includes(q) ||
+      e.employee_id?.toLowerCase().includes(q) ||
+      e.email?.toLowerCase().includes(q)
+  )
+})
+const queryEmployee = computed(() => (employeeQuery.value ? { id: null, name: employeeQuery.value } : null))
 
 const monthLabel = computed(() =>
   monthStart.value.toLocaleString('default', { month: 'long', year: 'numeric' })
@@ -31,7 +59,7 @@ const monthLabel = computed(() =>
 
 const monthDateIso = computed(() => monthStart.value.toISOString())
 
-const weekStart = 0 // Sunday
+const weekStart = 0 // 0=Sun; update from HR settings when available
 
 const days = computed(() => buildMonthDays(monthStart.value, calendarMap.value, weekStart))
 
@@ -41,36 +69,39 @@ const flatEvents = computed(() =>
 
 function buildMonthDays(startDate, map, startOfWeek = 0) {
   const start = new Date(startDate)
-  const startDay = (start.getDay() - startOfWeek + 7) % 7
   const rows = []
-  for (let i = 0; i < startDay; i++) {
-    const d = new Date(start)
-    d.setDate(d.getDate() - (startDay - i))
-    rows.push(buildDay(d, false, map))
+
+  // Find the first visible day in the grid (start of week for the month)
+  const firstGridDay = new Date(start)
+  const dayOfWeek = firstGridDay.getDay()
+  const diff = (dayOfWeek - startOfWeek + 7) % 7
+  firstGridDay.setDate(firstGridDay.getDate() - diff)
+
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(firstGridDay)
+    d.setDate(firstGridDay.getDate() + i)
+    rows.push(buildDay(d, d.getMonth() === start.getMonth(), map))
   }
 
-  const cursor = new Date(start)
-  while (cursor.getMonth() === start.getMonth()) {
-    rows.push(buildDay(cursor, true, map))
-    cursor.setDate(cursor.getDate() + 1)
-  }
-
-  while (rows.length % 7 !== 0 || rows.length < 42) {
-    rows.push(buildDay(cursor, false, map))
-    cursor.setDate(cursor.getDate() + 1)
-  }
   return rows
 }
 
 function buildDay(dateObj, isCurrentMonth, map) {
-  const dateStr = dateObj.toISOString().slice(0, 10)
+  const dateStr = formatDate(dateObj)
   return {
     date: dateStr,
     isCurrentMonth,
-    isToday: dateStr === new Date().toISOString().slice(0, 10),
+    isToday: dateStr === formatDate(new Date()),
     isSelected: dateStr === selectedDate.value,
     events: map[dateStr] || [],
   }
+}
+
+function formatDate(d) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 const nextMonth = () => {
@@ -224,10 +255,59 @@ watch([monthStart, selectedEmployeeId], () => {
           <section class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
             <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Record attendance</h2>
             <div class="mt-3 space-y-3">
-              <select v-model="attendanceForm.employee_id" class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white">
-                <option value="">Select employee</option>
-                <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.name }}</option>
-              </select>
+              <Combobox as="div" v-model="selectedEmployee" @update:modelValue="employeeQuery = ''">
+                <ComboboxLabel class="block text-sm/6 font-medium text-gray-900 dark:text-white">Assigned to</ComboboxLabel>
+                <div class="relative mt-2">
+                  <ComboboxInput
+                    class="block w-full rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
+                    :display-value="(person) => person?.name"
+                    @change="employeeQuery = $event.target.value"
+                    @blur="employeeQuery = ''"
+                    placeholder="Search employee"
+                  />
+                  <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                    <ChevronDownIcon class="size-5 text-gray-400" aria-hidden="true" />
+                  </ComboboxButton>
+
+                  <transition leave-active-class="transition ease-in duration-100" leave-from-class="" leave-to-class="opacity-0">
+                    <ComboboxOptions
+                      v-if="filteredEmployees.length > 0 || employeeQuery.length > 0"
+                      class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg outline outline-black/5 sm:text-sm dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10"
+                    >
+                      <ComboboxOption v-if="queryEmployee" :value="queryEmployee" as="template" v-slot="{ active }">
+                        <li
+                          :class="[
+                            'relative cursor-default select-none px-3 py-2',
+                            active ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500' : 'text-gray-900 dark:text-white',
+                          ]"
+                        >
+                          <span class="block truncate">{{ employeeQuery }}</span>
+                        </li>
+                      </ComboboxOption>
+                      <ComboboxOption v-for="emp in filteredEmployees" :key="emp.id" :value="emp" as="template" v-slot="{ active }">
+                        <li
+                          :class="[
+                            'relative cursor-default select-none px-3 py-2',
+                            active ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500' : 'text-gray-900 dark:text-white',
+                          ]"
+                        >
+                          <div class="flex">
+                            <span class="truncate">{{ emp.name }}</span>
+                            <span
+                              :class="[
+                                'ml-2 truncate text-gray-500',
+                                active ? 'text-white' : 'text-gray-500 dark:text-gray-400',
+                              ]"
+                            >
+                              {{ emp.employee_id || emp.email }}
+                            </span>
+                          </div>
+                        </li>
+                      </ComboboxOption>
+                    </ComboboxOptions>
+                  </transition>
+                </div>
+              </Combobox>
               <div class="grid grid-cols-2 gap-2">
                 <input v-model="attendanceForm.attendance_date" type="date" class="rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
                 <select v-model="attendanceForm.status" class="rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white">

@@ -2,6 +2,15 @@
 import { computed, onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
 import { fetchDepartmentTree, fetchEmployees, createEmployee, assignEmployeeToUser } from '../api'
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxLabel,
+  ComboboxOption,
+  ComboboxOptions,
+} from '@headlessui/vue'
+import { ChevronDownIcon } from '@heroicons/vue/20/solid'
 
 const employees = ref([])
 const loading = ref(false)
@@ -33,6 +42,8 @@ const createError = ref('')
 const departmentTree = ref([])
 const deptError = ref('')
 const deptLoading = ref(false)
+const deptQuery = ref('')
+const createDeptQuery = ref('')
 
 const statuses = ['all', 'active', 'probation', 'on_leave', 'exited']
 
@@ -54,6 +65,36 @@ const selectedDeptName = computed(() => {
   const hit = flatDepartments.value.find((d) => d.id === selectedDeptId.value)
   return hit?.name || null
 })
+
+const selectedDept = computed({
+  get: () => flatDepartments.value.find((d) => d.id === selectedDeptId.value) || null,
+  set: (val) => {
+    selectedDeptId.value = val?.id || null
+    deptQuery.value = ''
+  },
+})
+
+const filteredDeptOptions = computed(() => {
+  const q = deptQuery.value.toLowerCase()
+  if (!q) return flatDepartments.value
+  return flatDepartments.value.filter((d) => d.name.toLowerCase().includes(q))
+})
+const queryDeptOption = computed(() => (deptQuery.value ? { id: null, name: deptQuery.value, depth: 0 } : null))
+
+const selectedCreateDept = computed({
+  get: () => flatDepartments.value.find((d) => d.id === createForm.value.department_id) || null,
+  set: (val) => {
+    createForm.value.department_id = val?.id || ''
+    createDeptQuery.value = ''
+  },
+})
+
+const filteredCreateDeptOptions = computed(() => {
+  const q = createDeptQuery.value.toLowerCase()
+  if (!q) return flatDepartments.value
+  return flatDepartments.value.filter((d) => d.name.toLowerCase().includes(q))
+})
+const queryCreateDeptOption = computed(() => (createDeptQuery.value ? { id: null, name: createDeptQuery.value, depth: 0 } : null))
 
 const filtered = computed(() => {
   return employees.value.filter((emp) => {
@@ -107,6 +148,7 @@ const loadEmployees = async () => {
 
 const clearDept = () => {
   selectedDeptId.value = null
+  deptQuery.value = ''
 }
 
 onMounted(() => {
@@ -212,7 +254,90 @@ const submitCreate = async () => {
         </div>
       </div>
 
-      <div class="grid gap-6 lg:grid-cols-[280px,1fr]">
+
+
+          <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Department
+              </p>
+              <button
+                v-if="selectedDeptId"
+                type="button"
+                @click="clearDept"
+                class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+              >
+                Clear
+              </button>
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Cluster → division → department → section → unit
+            </p>
+
+            <div class="mt-3">
+              <Combobox as="div" v-model="selectedDept" @update:modelValue="deptQuery = ''">
+                <ComboboxLabel class="sr-only">Department</ComboboxLabel>
+                <div class="relative">
+                  <ComboboxInput
+                    class="block w-full rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
+                    :display-value="(dept) => dept?.name"
+                    @change="deptQuery = $event.target.value"
+                    @blur="deptQuery = ''"
+                    placeholder="Search department"
+                  />
+                  <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                    <ChevronDownIcon class="size-5 text-gray-400" aria-hidden="true" />
+                  </ComboboxButton>
+
+                  <transition leave-active-class="transition ease-in duration-100" leave-from-class="" leave-to-class="opacity-0">
+                    <ComboboxOptions
+                      v-if="filteredDeptOptions.length > 0 || deptQuery.length > 0"
+                      class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg outline outline-black/5 sm:text-sm dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10"
+                    >
+                      <ComboboxOption v-if="queryDeptOption" :value="queryDeptOption" as="template" v-slot="{ active }">
+                        <li
+                          :class="[
+                            'relative cursor-default select-none px-3 py-2',
+                            active ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500' : 'text-gray-900 dark:text-white',
+                          ]"
+                        >
+                          <span class="block truncate">{{ deptQuery }}</span>
+                        </li>
+                      </ComboboxOption>
+                      <ComboboxOption
+                        v-for="dept in filteredDeptOptions"
+                        :key="dept.id"
+                        :value="dept"
+                        as="template"
+                        v-slot="{ active }"
+                      >
+                        <li
+                          :class="[
+                            'relative cursor-default select-none px-3 py-2',
+                            active ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500' : 'text-gray-900 dark:text-white',
+                          ]"
+                        >
+                          <div class="flex">
+                            <span class="truncate">{{ dept.name }}</span>
+                            <span
+                              :class="[
+                                'ml-2 truncate',
+                                active ? 'text-white' : 'text-gray-500 dark:text-gray-400',
+                              ]"
+                            >
+                              {{ dept.parent_id ? 'Child' : 'Root' }}
+                            </span>
+                          </div>
+                        </li>
+                      </ComboboxOption>
+                    </ComboboxOptions>
+                  </transition>
+                </div>
+              </Combobox>
+            </div>
+          </div>
+
+                <div class="grid gap-6 lg:grid-cols-[280px,1fr]">
         <!-- Left rail: filters + department tree -->
         <div class="space-y-4">
           <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
@@ -246,40 +371,6 @@ const submitCreate = async () => {
                   {{ status === 'all' ? 'All statuses' : status }}
                 </option>
               </select>
-            </div>
-          </div>
-
-          <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Departments (nested)
-              </p>
-              <button
-                v-if="selectedDeptId"
-                type="button"
-                @click="clearDept"
-                class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-              >
-                Clear
-              </button>
-            </div>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Cluster → division → department → section → unit
-            </p>
-
-            <div v-if="deptLoading" class="mt-3 text-sm text-gray-500 dark:text-gray-400">Loading…</div>
-            <div v-else-if="deptError" class="mt-3 text-sm text-red-500">{{ deptError }}</div>
-            <div v-else class="mt-3 space-y-1">
-              <DepartmentNode
-                v-for="node in departmentTree"
-                :key="node.id"
-                :node="node"
-                :selected="selectedDeptId"
-                @select="selectedDeptId = $event"
-              />
-              <p v-if="!departmentTree.length" class="text-xs text-gray-500 dark:text-gray-400">
-                No departments yet. Create them in Settings → HR.
-              </p>
             </div>
           </div>
         </div>
@@ -478,20 +569,65 @@ const submitCreate = async () => {
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Department</label>
-            <select
-              v-model="createForm.department_id"
-              class="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:focus:border-indigo-400"
-            >
-              <option value="">No department</option>
-              <option
-                v-for="dept in flatDepartments"
-                :key="dept.id"
-                :value="dept.id"
-              >
-                {{ '—'.repeat(dept.depth) }} {{ dept.name }}
-              </option>
-            </select>
+            <Combobox as="div" v-model="selectedCreateDept" @update:modelValue="createDeptQuery = ''">
+              <ComboboxLabel class="block text-sm/6 font-medium text-gray-900 dark:text-white">Department</ComboboxLabel>
+              <div class="relative mt-2">
+                <ComboboxInput
+                  class="block w-full rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-white/10 dark:placeholder:text-gray-500 dark:focus:outline-indigo-500"
+                  :display-value="(dept) => dept?.name"
+                  @change="createDeptQuery = $event.target.value"
+                  @blur="createDeptQuery = ''"
+                  placeholder="Select department"
+                />
+                <ComboboxButton class="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-hidden">
+                  <ChevronDownIcon class="size-5 text-gray-400" aria-hidden="true" />
+                </ComboboxButton>
+
+                <transition leave-active-class="transition ease-in duration-100" leave-from-class="" leave-to-class="opacity-0">
+                  <ComboboxOptions
+                    v-if="filteredCreateDeptOptions.length > 0 || createDeptQuery.length > 0"
+                    class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg outline outline-black/5 sm:text-sm dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10"
+                  >
+                    <ComboboxOption v-if="queryCreateDeptOption" :value="queryCreateDeptOption" as="template" v-slot="{ active }">
+                      <li
+                        :class="[
+                          'relative cursor-default select-none px-3 py-2',
+                          active ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500' : 'text-gray-900 dark:text-white',
+                        ]"
+                      >
+                        <span class="block truncate">{{ createDeptQuery }}</span>
+                      </li>
+                    </ComboboxOption>
+                    <ComboboxOption
+                      v-for="dept in filteredCreateDeptOptions"
+                      :key="dept.id"
+                      :value="dept"
+                      as="template"
+                      v-slot="{ active }"
+                    >
+                      <li
+                        :class="[
+                          'relative cursor-default select-none px-3 py-2',
+                          active ? 'bg-indigo-600 text-white outline-hidden dark:bg-indigo-500' : 'text-gray-900 dark:text-white',
+                        ]"
+                      >
+                        <div class="flex">
+                          <span class="truncate">{{ dept.name }}</span>
+                          <span
+                            :class="[
+                              'ml-2 truncate',
+                              active ? 'text-white' : 'text-gray-500 dark:text-gray-400',
+                            ]"
+                          >
+                            {{ dept.parent_id ? 'Child' : 'Root' }}
+                          </span>
+                        </div>
+                      </li>
+                    </ComboboxOption>
+                  </ComboboxOptions>
+                </transition>
+              </div>
+            </Combobox>
           </div>
 
           <div class="flex items-center justify-between pt-2">

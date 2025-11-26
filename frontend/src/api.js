@@ -254,6 +254,14 @@ export function assignDutyRoster(rosterId, payload) {
     return api.post(`/api/v1/hr/duty-rosters/${rosterId}/assign`, payload)
 }
 
+export function updateDutyRoster(rosterId, payload) {
+    return api.put(`/api/v1/hr/duty-rosters/${rosterId}`, payload)
+}
+
+export function deleteDutyRoster(rosterId) {
+    return api.delete(`/api/v1/hr/duty-rosters/${rosterId}`)
+}
+
 export function fetchHrSettings() {
     return api.get('/api/v1/hr/settings')
 }
