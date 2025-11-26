@@ -8,6 +8,7 @@ use App\Modules\HR\Models\DutyRosterAssignment;
 use App\Modules\HR\Models\Employee;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DutyRosterController extends Controller
 {
@@ -95,15 +96,56 @@ class DutyRosterController extends Controller
             if ($emp->company_id !== $company->id) {
                 abort(403, 'Employee not in this company.');
             }
-            DutyRosterAssignment::create([
-                'company_id' => $company->id,
-                'operation_id' => currentOperationId(),
-                'employee_id' => $emp->id,
-                'duty_roster_id' => $dutyRoster->id,
-                'start_date' => $start,
-                'end_date' => $end,
-                'applied_by' => auth()->id(),
-            ]);
+
+            DB::transaction(function () use ($company, $emp, $dutyRoster, $start, $end) {
+                // Find overlapping assignments and split them so only the overlapping days are replaced
+                $overlaps = DutyRosterAssignment::where('company_id', $company->id)
+                    ->where('employee_id', $emp->id)
+                    ->whereDate('start_date', '<=', $end)
+                    ->whereDate('end_date', '>=', $start)
+                    ->lockForUpdate()
+                    ->get();
+
+                foreach ($overlaps as $old) {
+                    // left segment (before new start)
+                    if ($old->start_date < $start) {
+                        DutyRosterAssignment::create([
+                            'company_id' => $company->id,
+                            'operation_id' => $old->operation_id,
+                            'employee_id' => $emp->id,
+                            'duty_roster_id' => $old->duty_roster_id,
+                            'start_date' => $old->start_date,
+                            'end_date' => Carbon::parse($start)->subDay()->toDateString(),
+                            'applied_by' => $old->applied_by,
+                        ]);
+                    }
+
+                    // right segment (after new end)
+                    if ($old->end_date > $end) {
+                        DutyRosterAssignment::create([
+                            'company_id' => $company->id,
+                            'operation_id' => $old->operation_id,
+                            'employee_id' => $emp->id,
+                            'duty_roster_id' => $old->duty_roster_id,
+                            'start_date' => Carbon::parse($end)->addDay()->toDateString(),
+                            'end_date' => $old->end_date,
+                            'applied_by' => $old->applied_by,
+                        ]);
+                    }
+
+                    $old->delete();
+                }
+
+                DutyRosterAssignment::create([
+                    'company_id' => $company->id,
+                    'operation_id' => currentOperationId(),
+                    'employee_id' => $emp->id,
+                    'duty_roster_id' => $dutyRoster->id,
+                    'start_date' => $start,
+                    'end_date' => $end,
+                    'applied_by' => auth()->id(),
+                ]);
+            });
         }
 
         return response()->json(['message' => 'Roster assigned.']);

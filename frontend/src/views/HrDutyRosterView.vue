@@ -107,12 +107,19 @@ function buildMonthDays(startDate, map, startOfWeek = 0) {
 
 function buildDay(dateObj, isCurrentMonth, map) {
   const dateStr = formatDate(dateObj)
+  const events = map[dateStr] || []
+  const hasRoster = events.some((e) => e.type === 'roster')
+  const isOff = events.some((e) => e.type === 'roster' && /off/i.test(e.name || '') || e.time?.toLowerCase() === 'off day')
+  const isHoliday = events.some((e) => e.type === 'holiday')
   return {
     date: dateStr,
     isCurrentMonth,
     isToday: dateStr === formatDate(new Date()),
     isSelected: dateStr === selectedDate.value,
-    events: map[dateStr] || [],
+    events,
+    isOff,
+    hasRoster,
+    isHoliday,
   }
 }
 
@@ -172,8 +179,8 @@ async function loadCalendar() {
   end.setDate(0)
 
   const params = {
-    start_date: start.toISOString().slice(0, 10),
-    end_date: end.toISOString().slice(0, 10),
+    start_date: formatDate(start),
+    end_date: formatDate(end),
   }
   if (selectedEmployeeId.value) params.employee_id = selectedEmployeeId.value
 

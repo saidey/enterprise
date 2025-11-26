@@ -145,9 +145,12 @@ const weekDays = computed(() => {
             <div
               v-for="day in days"
               :key="day.date"
-              :data-is-current-month="day.isCurrentMonth ? '' : undefined"
-              :data-is-today="day.isToday ? '' : undefined"
-              class="group relative bg-gray-50 px-3 py-2 text-gray-500 data-is-current-month:bg-white dark:bg-gray-900 dark:text-gray-400 dark:not-data-is-current-month:before:pointer-events-none dark:not-data-is-current-month:before:absolute dark:not-data-is-current-month:before:inset-0 dark:not-data-is-current-month:before:bg-gray-800/50 dark:data-is-current-month:bg-gray-900"
+              class="group relative px-3 py-2"
+              :class="[
+                day.isCurrentMonth
+                  ? (day.isHoliday ? 'bg-sky-300/60' : day.isOff ? 'bg-red-300/70' : day.hasRoster ? 'bg-emerald-300/60' : 'bg-white dark:bg-gray-900')
+                  : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+              ]"
             >
               <time
                 :datetime="day.date"
@@ -178,10 +181,12 @@ const weekDays = computed(() => {
               v-for="day in days"
               :key="day.date"
               type="button"
-              :data-is-current-month="day.isCurrentMonth ? '' : undefined"
-              :data-is-selected="day.isSelected ? '' : undefined"
-              :data-is-today="day.isToday ? '' : undefined"
-              class="group relative flex h-14 flex-col px-3 py-2 not-data-is-current-month:bg-gray-50 not-data-is-selected:not-data-is-current-month:not-data-is-today:text-gray-500 hover:bg-gray-100 focus:z-10 data-is-current-month:bg-white not-data-is-selected:data-is-current-month:not-data-is-today:text-gray-900 data-is-current-month:hover:bg-gray-100 data-is-selected:font-semibold data-is-selected:text-white data-is-today:font-semibold not-data-is-selected:data-is-today:text-indigo-600 dark:not-data-is-current-month:bg-gray-900 dark:not-data-is-selected:not-data-is-current-month:not-data-is-today:text-gray-400 dark:not-data-is-current-month:before:pointer-events-none dark:not-data-is-current-month:before:absolute dark:not-data-is-current-month:before:inset-0 dark:not-data-is-current-month:before:bg-gray-800/50 dark:hover:bg-gray-900/50 dark:data-is-current-month:bg-gray-900 dark:not-data-is-selected:data-is-current-month:not-data-is-today:text-white dark:data-is-current-month:hover:bg-gray-900/50 dark:not-data-is-selected:data-is-today:text-indigo-400"
+              class="group relative flex h-14 flex-col px-3 py-2 focus:z-10"
+              :class="[
+                day.isCurrentMonth
+                  ? (day.isHoliday ? 'bg-sky-300/60' : day.isOff ? 'bg-red-300/70' : day.hasRoster ? 'bg-emerald-300/60' : 'bg-white dark:bg-gray-900')
+                  : 'bg-gray-200 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+              ]"
               @click="emit('select', day.date)"
             >
               <time
