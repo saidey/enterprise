@@ -56,7 +56,7 @@
                   <ul class="flex flex-col gap-y-7">
                     <li>
                       <ul class="-mx-2 space-y-1">
-                        <li v-for="item in navigation" :key="item.name">
+                        <li v-for="item in navigation" :key="item.name" class="space-y-1">
                           <router-link
                             :to="item.to"
                             @click="sidebarOpen = false"
@@ -76,8 +76,28 @@
                                 'size-6 shrink-0'
                               ]"
                             />
-                            {{ item.name }}
+                            <span class="flex-1">{{ item.name }}</span>
                           </router-link>
+                          <ul
+                            v-if="item.children?.length"
+                            class="ml-10 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10"
+                          >
+                            <li v-for="child in item.children" :key="child.name">
+                              <router-link
+                                :to="child.to"
+                                @click="sidebarOpen = false"
+                                :class="[
+                                  isCurrentRoute(child.to)
+                                    ? 'text-indigo-600 dark:text-white'
+                                    : 'text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-white',
+                                  'group flex gap-x-2 rounded-md p-2 text-sm font-medium'
+                                ]"
+                              >
+                                <span class="mt-1.5 size-2 rounded-full bg-gray-300 dark:bg-white/30"></span>
+                                <span class="flex-1">{{ child.name }}</span>
+                              </router-link>
+                            </li>
+                          </ul>
                         </li>
                       </ul>
                     </li>
@@ -118,7 +138,7 @@
           <ul class="flex flex-1 flex-col gap-y-7">
             <li>
               <ul class="-mx-2 space-y-1">
-                <li v-for="item in navigation" :key="item.name">
+                <li v-for="item in navigation" :key="item.name" class="space-y-1">
                   <router-link
                     :to="item.to"
                     :class="[
@@ -137,8 +157,24 @@
                         'size-6 shrink-0'
                       ]"
                     />
-                    {{ item.name }}
+                    <span class="flex-1">{{ item.name }}</span>
                   </router-link>
+                  <ul v-if="item.children?.length" class="ml-10 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10">
+                    <li v-for="child in item.children" :key="child.name">
+                      <router-link
+                        :to="child.to"
+                        :class="[
+                          isCurrentRoute(child.to)
+                            ? 'text-indigo-600 dark:text-white'
+                            : 'text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-white',
+                          'group flex gap-x-2 rounded-md p-2 text-sm font-medium'
+                        ]"
+                      >
+                        <span class="mt-1.5 size-2 rounded-full bg-gray-300 dark:bg-white/30"></span>
+                        <span class="flex-1">{{ child.name }}</span>
+                      </router-link>
+                    </li>
+                  </ul>
                 </li>
               </ul>
             </li>
@@ -416,9 +452,19 @@ const navigation = computed(() => {
     }
     return [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
-      { name: 'HR overview', to: '/apps/hr', icon: HomeIcon },
-      { name: 'Employees', to: '/apps/hr/employees', icon: DocumentDuplicateIcon },
-      { name: 'Leave', to: '/apps/hr/leave', icon: DocumentDuplicateIcon },
+      {
+        name: 'HR workspace',
+        to: '/apps/hr',
+        icon: HomeIcon,
+        children: [
+          { name: 'Overview', to: '/apps/hr' },
+          { name: 'Employees', to: '/apps/hr/employees' },
+          { name: 'Attendance', to: '/apps/hr/attendance' },
+          { name: 'Duty rosters', to: '/apps/hr/duty-rosters' },
+          { name: 'Settings', to: '/apps/hr/settings' },
+          { name: 'Leave', to: '/apps/hr/leave' },
+        ],
+      },
     ]
   }
 
@@ -428,19 +474,33 @@ const navigation = computed(() => {
     }
     return [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
-      { name: 'Accounting overview', to: '/apps/accounting', icon: HomeIcon },
-      { name: 'Journals', to: '/apps/accounting/journals', icon: DocumentDuplicateIcon },
-      { name: 'Reports', to: '/apps/accounting/reports', icon: DocumentDuplicateIcon },
+      {
+        name: 'Accounting',
+        to: '/apps/accounting',
+        icon: HomeIcon,
+        children: [
+          { name: 'Overview', to: '/apps/accounting' },
+          { name: 'Journals', to: '/apps/accounting/journals' },
+          { name: 'Reports', to: '/apps/accounting/reports' },
+        ],
+      },
     ]
   }
 
   if (app === 'admin' || isAdminContext.value) {
     return [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
-      { name: 'Admin home', to: '/admin', icon: HomeIcon },
-      { name: 'Company settings', to: '/settings/company', icon: DocumentDuplicateIcon },
-      { name: 'Permissions', to: '/settings/permissions', icon: Cog6ToothIcon },
-      { name: 'Audit logs', to: '/audit-logs', icon: DocumentDuplicateIcon },
+      {
+        name: 'Admin',
+        to: '/admin',
+        icon: HomeIcon,
+        children: [
+          { name: 'Overview', to: '/admin' },
+          { name: 'Company settings', to: '/settings/company' },
+          { name: 'Permissions', to: '/settings/permissions' },
+          { name: 'Audit logs', to: '/audit-logs' },
+        ],
+      },
     ]
   }
 
@@ -472,7 +532,7 @@ const userNavigation = [
   { name: 'Sign out', action: 'logout' }
 ]
 
-const isCurrentRoute = (to) => route.path === to
+const isCurrentRoute = (to) => route.path === to || route.path.startsWith(`${to}/`)
 
 const handleUserAction = async (item) => {
   if (item.action === 'logout') {

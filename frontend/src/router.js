@@ -69,6 +69,24 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
     },
     {
+        path: '/apps/hr/attendance',
+        name: 'app-hr-attendance',
+        component: () => import('./views/HrAttendanceView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
+        path: '/apps/hr/duty-rosters',
+        name: 'app-hr-duty-rosters',
+        component: () => import('./views/HrDutyRosterView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
+        path: '/apps/hr/settings',
+        name: 'app-hr-settings',
+        component: () => import('./views/HrSettingsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
         path: '/apps/accounting',
         name: 'app-accounting',
         component: () => import('./views/AppAccountingView.vue'),

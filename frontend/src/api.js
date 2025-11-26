@@ -204,6 +204,18 @@ export function fetchDepartmentTree() {
     return api.get('/api/v1/hr/departments/tree')
 }
 
+export function createDepartment(payload) {
+    return api.post('/api/v1/hr/departments', payload)
+}
+
+export function updateDepartment(id, payload) {
+    return api.put(`/api/v1/hr/departments/${id}`, payload)
+}
+
+export function deleteDepartment(id) {
+    return api.delete(`/api/v1/hr/departments/${id}`)
+}
+
 export function fetchEmployees(params = {}) {
     return api.get('/api/v1/hr/employees', { params })
 }
@@ -216,6 +228,38 @@ export function assignEmployeeToUser(employeeId, userEmail) {
     return api.post(`/api/v1/hr/employees/${employeeId}/assign-user`, {
         user_email: userEmail,
     })
+}
+
+export function fetchAttendance(params = {}) {
+    return api.get('/api/v1/hr/attendance', { params })
+}
+
+export function createAttendance(payload) {
+    return api.post('/api/v1/hr/attendance', payload)
+}
+
+export function fetchAttendanceCalendar(params = {}) {
+    return api.get('/api/v1/hr/attendance/calendar', { params })
+}
+
+export function fetchDutyRosters() {
+    return api.get('/api/v1/hr/duty-rosters')
+}
+
+export function createDutyRoster(payload) {
+    return api.post('/api/v1/hr/duty-rosters', payload)
+}
+
+export function assignDutyRoster(rosterId, payload) {
+    return api.post(`/api/v1/hr/duty-rosters/${rosterId}/assign`, payload)
+}
+
+export function fetchHrSettings() {
+    return api.get('/api/v1/hr/settings')
+}
+
+export function updateHrSettings(payload) {
+    return api.put('/api/v1/hr/settings', payload)
 }
 
 /* ============================================================================
