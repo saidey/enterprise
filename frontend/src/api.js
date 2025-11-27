@@ -160,6 +160,26 @@ export function updateUserPermissions(userId, { role_ids = [], permission_ids = 
 }
 
 /* ============================================================================
+ * Role management
+ * ========================================================================== */
+
+export function fetchRoles() {
+    return api.get('/api/admin/roles')
+}
+
+export function fetchRole(roleId) {
+    return api.get(`/api/admin/roles/${roleId}`)
+}
+
+export function updateRole(roleId, { permission_ids = [], name, description } = {}) {
+    return api.put(`/api/admin/roles/${roleId}`, { permission_ids, name, description })
+}
+
+export function createRole(payload) {
+    return api.post('/api/admin/roles', payload)
+}
+
+/* ============================================================================
  * Company & session
  * ========================================================================== */
 
@@ -296,6 +316,134 @@ export function fetchHrSettings() {
 
 export function updateHrSettings(payload) {
     return api.put('/api/v1/hr/settings', payload)
+}
+
+/* ============================================================================
+ * Projects
+ * ========================================================================== */
+
+export function fetchIslands() {
+    return api.get('/api/v1/projects/islands')
+}
+
+export function createIsland(payload) {
+    return api.post('/api/v1/projects/islands', payload)
+}
+
+export function updateIsland(id, payload) {
+    return api.put(`/api/v1/projects/islands/${id}`, payload)
+}
+
+export function deleteIsland(id) {
+    return api.delete(`/api/v1/projects/islands/${id}`)
+}
+
+export function fetchProjects(params = {}) {
+    return api.get('/api/v1/projects', { params })
+}
+
+export function createProject(payload) {
+    return api.post('/api/v1/projects', payload)
+}
+
+export function fetchProject(id) {
+    return api.get(`/api/v1/projects/${id}`)
+}
+
+export function updateProject(id, payload) {
+    return api.put(`/api/v1/projects/${id}`, payload)
+}
+
+export function deleteProject(id) {
+    return api.delete(`/api/v1/projects/${id}`)
+}
+
+export function fetchProjectPhases(projectId) {
+    return api.get(`/api/v1/projects/${projectId}/phases`)
+}
+
+export function createProjectPhase(projectId, payload) {
+    return api.post(`/api/v1/projects/${projectId}/phases`, payload)
+}
+
+export function updateProjectPhase(phaseId, payload) {
+    return api.put(`/api/v1/projects/phases/${phaseId}`, payload)
+}
+
+export function deleteProjectPhase(phaseId) {
+    return api.delete(`/api/v1/projects/phases/${phaseId}`)
+}
+
+export function fetchProjectTasks(projectId) {
+    return api.get(`/api/v1/projects/${projectId}/tasks`)
+}
+
+export function createProjectTask(projectId, payload) {
+    return api.post(`/api/v1/projects/${projectId}/tasks`, payload)
+}
+
+export function updateProjectTask(taskId, payload) {
+    return api.put(`/api/v1/projects/tasks/${taskId}`, payload)
+}
+
+export function deleteProjectTask(taskId) {
+    return api.delete(`/api/v1/projects/tasks/${taskId}`)
+}
+
+export function fetchProcurementItems(projectId) {
+    return api.get(`/api/v1/projects/${projectId}/procurement`)
+}
+
+export function createProcurementItem(projectId, payload) {
+    return api.post(`/api/v1/projects/${projectId}/procurement`, payload)
+}
+
+export function updateProcurementItem(itemId, payload) {
+    return api.put(`/api/v1/projects/procurement/${itemId}`, payload)
+}
+
+export function deleteProcurementItem(itemId) {
+    return api.delete(`/api/v1/projects/procurement/${itemId}`)
+}
+
+export function fetchCostEntries(projectId) {
+    return api.get(`/api/v1/projects/${projectId}/costs`)
+}
+
+export function createCostEntry(projectId, payload) {
+    return api.post(`/api/v1/projects/${projectId}/costs`, payload)
+}
+
+export function updateCostEntry(costId, payload) {
+    return api.put(`/api/v1/projects/costs/${costId}`, payload)
+}
+
+export function deleteCostEntry(costId) {
+    return api.delete(`/api/v1/projects/costs/${costId}`)
+}
+
+export function fetchMyProjectTasks() {
+    return api.get('/api/v1/projects/my/tasks')
+}
+
+export function fetchMyWbs() {
+    return api.get('/api/v1/projects/my/wbs')
+}
+
+export function fetchWbs(projectId) {
+    return api.get(`/api/v1/projects/${projectId}/wbs`)
+}
+
+export function createWbs(projectId, payload) {
+    return api.post(`/api/v1/projects/${projectId}/wbs`, payload)
+}
+
+export function updateWbs(wbsId, payload) {
+    return api.put(`/api/v1/projects/wbs/${wbsId}`, payload)
+}
+
+export function deleteWbs(wbsId) {
+    return api.delete(`/api/v1/projects/wbs/${wbsId}`)
 }
 
 /* ============================================================================

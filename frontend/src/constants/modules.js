@@ -26,4 +26,13 @@ export const moduleRegistry = [
     requiredModuleCode: null, // always visible
     requiredPermission: null, // adjust if you want only certain users
   },
+  {
+    key: 'projects',
+    name: 'Projects',
+    description: 'Project tracking, phases, tasks, procurement, and costs.',
+    badge: 'Projects',
+    route: '/apps/projects',
+    requiredModuleCode: 'projects',
+    requiredPermission: null,
+  },
 ]

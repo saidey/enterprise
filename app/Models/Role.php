@@ -14,6 +14,7 @@ class Role extends SpatieRole
         'name',
         'guard_name',
         'role_scope',
+        'description',
     ];
 
     public function scopePlatform($query)

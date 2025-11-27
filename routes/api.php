@@ -60,4 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/permissions/meta', [UserPermissionController::class, 'meta']);
     Route::get('/admin/users/{user}/permissions', [UserPermissionController::class, 'show']);
     Route::put('/admin/users/{user}/permissions', [UserPermissionController::class, 'update']);
+    Route::get('/admin/roles', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'index']);
+    Route::post('/admin/roles', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'store']);
+    Route::get('/admin/roles/{role}', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'show']);
+    Route::put('/admin/roles/{role}', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'update']);
 });

@@ -532,7 +532,35 @@ const navigation = computed(() => {
           { name: 'Overview', to: '/admin' },
           { name: 'Company settings', to: '/settings/company' },
           { name: 'Permissions', to: '/settings/permissions' },
+          { name: 'Roles', to: '/settings/roles' },
           { name: 'Audit logs', to: '/audit-logs' },
+        ],
+      },
+    ]
+    return items
+  }
+
+  if (app === 'projects') {
+    const items = [
+      { name: 'Apps dashboard', to: '/', icon: HomeIcon },
+      {
+        name: 'Projects',
+        to: '/apps/projects',
+        icon: DocumentDuplicateIcon,
+        children: [
+          { name: 'Dashboard', to: '/apps/projects/dashboard' },
+          { name: 'Projects', to: '/apps/projects' },
+          { name: 'WBS', to: '/apps/projects/wbs' },
+          { name: 'Islands', to: '/apps/projects/islands' },
+          { name: 'Reports', to: '/apps/projects/reports' },
+        ],
+      },
+      {
+        name: 'My Projects',
+        to: '/apps/projects/my/tasks',
+        icon: DocumentDuplicateIcon,
+        children: [
+          { name: 'My tasks', to: '/apps/projects/my/tasks' },
         ],
       },
     ]

@@ -46,7 +46,12 @@ class UserPermissionController extends Controller
         $actorIsSuper = $actor?->hasRole('superadmin');
 
         $roles = Role::select(['id', 'name', 'role_scope'])
-            ->when(! $actorIsSuper, fn ($q) => $q->where('name', '!=', 'superadmin'))
+            ->when(! $actorIsSuper, function ($q) {
+                $q->where('name', '!=', 'superadmin')
+                    ->where(function ($qq) {
+                        $qq->whereNull('role_scope')->orWhere('role_scope', '!=', 'platform');
+                    });
+            })
             ->orderBy('name')
             ->get();
 
@@ -94,7 +99,9 @@ class UserPermissionController extends Controller
         $actorIsSuper = $actor?->hasRole('superadmin');
 
         $superRoleId = Role::where('name', 'superadmin')->value('id');
+        $companyOwnerRoleId = Role::where('name', 'company_owner')->value('id');
         $requestingSuper = $superRoleId && in_array($superRoleId, $data['role_ids'] ?? [], true);
+        $requestingCompanyOwner = $companyOwnerRoleId && in_array($companyOwnerRoleId, $data['role_ids'] ?? [], true);
 
         if ($requestingSuper && ! $actorIsSuper) {
             abort(403, 'Only superadmin can assign the superadmin role.');
@@ -111,6 +118,17 @@ class UserPermissionController extends Controller
             abort_if($existingSuper, 422, 'Only one superadmin is allowed.');
         }
 
+        if ($requestingCompanyOwner) {
+            $currentCompany = currentCompany();
+            if ($currentCompany) {
+                $existingOwner = User::role('company_owner')
+                    ->whereHas('companies', fn ($q) => $q->where('companies.id', $currentCompany->id))
+                    ->where('users.id', '!=', $user->id)
+                    ->first();
+                abort_if($existingOwner, 422, 'Only one company owner is allowed per company.');
+            }
+        }
+
         // Capture old state for auditing
         $oldState = [
             'role_ids' => $user->roles()->pluck('id')->values()->all(),
@@ -121,6 +139,10 @@ class UserPermissionController extends Controller
         $roles = ! empty($data['role_ids'] ?? [])
             ? Role::whereIn('id', $data['role_ids'])->get()
             : collect();
+
+        if (! $actorIsSuper && $roles->contains(fn ($r) => $r->role_scope === 'platform')) {
+            abort(403, 'Platform roles can only be assigned by superadmin.');
+        }
 
         $permissions = ! empty($data['permission_ids'] ?? [])
             ? Permission::whereIn('id', $data['permission_ids'])->get()

@@ -11,4 +11,9 @@ return [
         'enabled' => true,
         'service_provider' => \App\Modules\Accounting\AccountingServiceProvider::class,
     ],
+    'projects' => [
+        'name' => 'Projects',
+        'enabled' => true,
+        'service_provider' => \App\Modules\Projects\ProjectsServiceProvider::class,
+    ],
 ];

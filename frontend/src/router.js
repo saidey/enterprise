@@ -123,6 +123,54 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'accounting' },
     },
     {
+        path: '/apps/projects',
+        name: 'app-projects',
+        component: () => import('./views/AppProjectsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
+        path: '/apps/projects/dashboard',
+        name: 'app-projects-dashboard',
+        component: () => import('./views/ProjectsDashboardView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
+        path: '/apps/projects/my/tasks',
+        name: 'app-projects-my-tasks',
+        component: () => import('./views/ProjectsMyTasksView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
+        path: '/apps/projects/islands',
+        name: 'app-projects-islands',
+        component: () => import('./views/ProjectsIslandsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
+        path: '/apps/projects/reports',
+        name: 'app-projects-reports',
+        component: () => import('./views/ProjectsReportsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
+        path: '/apps/projects/:id',
+        name: 'app-projects-detail',
+        component: () => import('./views/ProjectDetailView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+        },
+    {
+        path: '/apps/projects/:id/wbs',
+        name: 'app-projects-wbs',
+        component: () => import('./views/ProjectsWbsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
+        path: '/apps/projects/wbs',
+        name: 'app-projects-wbs-root',
+        component: () => import('./views/ProjectsWbsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
         path: '/admin',
         name: 'app-admin',
         component: () => import('./views/AppAdminView.vue'),
@@ -144,6 +192,12 @@ const routes = [
         path: '/settings/permissions',
         name: 'permissions',
         component: PermissionManagementView,
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'admin' },
+    },
+    {
+        path: '/settings/roles',
+        name: 'roles',
+        component: () => import('./views/RoleManagementView.vue'),
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'admin' },
     },
     {

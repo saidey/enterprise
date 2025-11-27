@@ -223,43 +223,6 @@
                     No roles configured.
                   </div>
 
-                  <div v-if="platformRoles.length" class="space-y-2">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                      Platform roles
-                    </p>
-                    <ul class="space-y-1">
-                      <li
-                        v-for="role in platformRoles"
-                        :key="role.id"
-                      >
-                        <label
-                          class="flex cursor-pointer items-start gap-x-3 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/5"
-                        >
-                          <input
-                            v-model="selectedRoleIds"
-                            :value="role.id"
-                            type="checkbox"
-                            class="mt-1 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-gray-900"
-                          />
-                          <div class="min-w-0">
-                            <p class="text-sm/6 font-medium text-gray-900 dark:text-gray-100">
-                              {{ role.name }}
-                            </p>
-                            <p
-                              v-if="role.description"
-                              class="text-xs/5 text-gray-500 dark:text-gray-400"
-                            >
-                              {{ role.description }}
-                            </p>
-                          </div>
-                          <span class="text-[11px] font-medium uppercase tracking-wide text-indigo-500 dark:text-indigo-300">
-                            Platform
-                          </span>
-                        </label>
-                      </li>
-                    </ul>
-                  </div>
-
                   <div v-if="companyRoles.length" class="space-y-2">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                       Company roles
@@ -322,47 +285,56 @@
                   </button>
                 </div>
 
-                <div class="mt-3 flex-1 overflow-y-auto">
+                <div class="mt-3 flex-1 overflow-y-auto space-y-4">
                   <div
                     v-if="!permissions.length"
                     class="py-4 text-xs/5 text-gray-500 dark:text-gray-400"
                   >
                     No direct permissions available.
                   </div>
-                  <ul
+                  <div
                     v-else
-                    role="list"
-                    class="space-y-1"
+                    v-for="group in groupedPermissions"
+                    :key="group.key"
+                    class="space-y-2 rounded-lg border border-gray-100 p-3 dark:border-white/10"
                   >
-                    <li
-                      v-for="permission in permissions"
-                      :key="permission.id"
-                    >
-                      <label
-                        class="flex cursor-pointer items-start gap-x-3 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/5"
+                    <div class="flex items-center justify-between">
+                      <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        {{ group.label }}
+                      </p>
+                      <span class="text-[11px] text-gray-400 dark:text-gray-500">{{ group.items.length }} perm</span>
+                    </div>
+                    <ul class="space-y-1">
+                      <li
+                        v-for="permission in group.items"
+                        :key="permission.id"
                       >
-                        <input
-                          v-model="selectedPermissionIds"
-                          :value="permission.id"
-                          type="checkbox"
-                          class="mt-1 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-gray-900"
-                        />
-                        <div class="min-w-0">
-                          <p
-                            class="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-800 ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-white/10"
-                          >
-                            {{ permission.name }}
-                          </p>
-                          <p
-                            v-if="permission.description"
-                            class="mt-1 text-xs/5 text-gray-500 dark:text-gray-400"
-                          >
-                            {{ permission.description }}
-                          </p>
-                        </div>
-                      </label>
-                    </li>
-                  </ul>
+                        <label
+                          class="flex cursor-pointer items-start gap-x-3 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-white/5"
+                        >
+                          <input
+                            v-model="selectedPermissionIds"
+                            :value="permission.id"
+                            type="checkbox"
+                            class="mt-1 size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-white/20 dark:bg-gray-900"
+                          />
+                          <div class="min-w-0">
+                            <p
+                              class="inline-flex items-center rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-medium text-gray-800 ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:ring-white/10"
+                            >
+                              {{ permission.display || permission.name }}
+                            </p>
+                            <p
+                              v-if="permission.description"
+                              class="mt-1 text-xs/5 text-gray-500 dark:text-gray-400"
+                            >
+                              {{ permission.description }}
+                            </p>
+                          </div>
+                        </label>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             </div>
@@ -460,6 +432,29 @@ const filteredUsers = computed(() => {
 const platformRoles = computed(() => roles.value.filter((r) => r.role_scope === 'platform'))
 const companyRoles = computed(() => roles.value.filter((r) => r.role_scope === 'company'))
 
+const groupedPermissions = computed(() => {
+  const groups = {}
+  const friendly = (name) => name.replace(/\./g, ' ').replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
+
+  permissions.value.forEach((p) => {
+    const name = p.name || ''
+    const key = name.includes('.') ? name.split('.')[0] : 'general'
+    if (!groups[key]) {
+      groups[key] = { key, label: key === 'general' ? 'General' : friendly(key), items: [] }
+    }
+    groups[key].items.push({
+      ...p,
+      display: friendly(name),
+    })
+  })
+  return Object.values(groups)
+    .map((g) => ({
+      ...g,
+      items: g.items.sort((a, b) => a.display.localeCompare(b.display)),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+})
+
 const loadInitial = async () => {
   loading.value = true
   error.value = null
@@ -498,7 +493,9 @@ const loadUserDetails = async (userId) => {
 
   try {
     const { data } = await fetchUserPermissions(userId)
-    selectedRoleIds.value = (data.roles || []).map((r) => r.id)
+    selectedRoleIds.value = (data.roles || [])
+      .filter((r) => r.role_scope === 'company')
+      .map((r) => r.id)
     selectedPermissionIds.value = (data.permissions || []).map((p) => p.id)
   } catch (e) {
     console.error(e)
@@ -527,8 +524,14 @@ const handleSave = async () => {
   success.value = null
 
   try {
+    // Only allow company roles to be assigned from this screen
+    const companyOnlyRoles = selectedRoleIds.value.filter((id) => {
+      const role = roles.value.find((r) => r.id === id)
+      return role?.role_scope === 'company'
+    })
+
     await updateUserPermissions(selectedUserId.value, {
-      role_ids: selectedRoleIds.value,
+      role_ids: companyOnlyRoles,
       permission_ids: selectedPermissionIds.value,
     })
     success.value = 'Changes saved.'
