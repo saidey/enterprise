@@ -87,6 +87,36 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
     },
     {
+        path: '/apps/hr/self/attendance',
+        name: 'app-hr-self-attendance',
+        component: () => import('./views/HrSelfAttendanceView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
+        path: '/apps/hr/self/directory',
+        name: 'app-hr-directory',
+        component: () => import('./views/HrDirectoryView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
+        path: '/apps/hr/self/leaves',
+        name: 'app-hr-leave-balance',
+        component: () => import('./views/HrLeaveBalanceView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
+        path: '/apps/hr/self/payslips',
+        name: 'app-hr-payslips',
+        component: () => import('./views/HrPayslipsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
+        path: '/apps/hr/claim',
+        name: 'app-hr-claim',
+        component: () => import('./views/HrInviteClaimView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true },
+    },
+    {
         path: '/apps/accounting',
         name: 'app-accounting',
         component: () => import('./views/AppAccountingView.vue'),
@@ -136,6 +166,17 @@ let cachedUser = null
 const session = useSession()
 let cachedModules = []
 let cachedModulesCompanyId = null
+const hasHrAccess = () => {
+    const keys = [
+        'hr.view_employees',
+        'hr.manage_employees',
+        'hr.view_attendance',
+        'hr.manage_attendance',
+        'hr.view_leave',
+        'hr.manage_leave',
+    ]
+    return keys.some((k) => session.hasPermission(k))
+}
 
 export const resetCachedUser = () => {
     cachedUser = null
@@ -224,7 +265,9 @@ router.beforeEach(async (to, from, next) => {
     // ---- MODULE ACCESS CHECK ----
     if (to.meta.app && to.meta.app !== 'admin') {
         const enabledCodes = new Set((session.modules.value || []).map((m) => m.code))
-        if (!enabledCodes.has(to.meta.app)) {
+        const isHrApp = to.meta.app === 'hr'
+        const allowHr = isHrApp && (enabledCodes.has('hr') || hasHrAccess())
+        if (!enabledCodes.has(to.meta.app) && !allowHr) {
             console.warn(`Module ${to.meta.app} not enabled for this company`)
             return next({ name: 'home' })
         }

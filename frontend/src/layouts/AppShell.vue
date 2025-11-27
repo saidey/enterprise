@@ -408,6 +408,18 @@ const {
   setCurrentApp
 } = useSession()
 
+const hrWorkspaceAllowed = computed(() => {
+  const keys = [
+    'hr.view_employees',
+    'hr.manage_employees',
+    'hr.view_attendance',
+    'hr.manage_attendance',
+    'hr.view_leave',
+    'hr.manage_leave'
+  ]
+  return keys.some((k) => hasPermission(k))
+})
+
 const companyName = computed(() => currentCompany.value?.name || '')
 const operationName = computed(() => currentOperation.value?.name || '')
 const userName = computed(() => user.value?.name || 'User')
@@ -438,7 +450,13 @@ const canUseModule = (key) => {
   const enabledCodes = new Set((modules.value || []).map((m) => m.code))
   const mod = moduleRegistry.find((m) => m.key === key)
   if (!mod) return false
-  if (mod.requiredModuleCode && !enabledCodes.has(mod.requiredModuleCode)) return false
+  if (key === 'hr') {
+    // HR available if module is enabled OR user has HR permissions
+    return enabledCodes.has('hr') || hrWorkspaceAllowed.value
+  }
+  if (mod.requiredModuleCode && !enabledCodes.has(mod.requiredModuleCode)) {
+    return false
+  }
   if (mod.requiredPermission && !hasPermission(mod.requiredPermission)) return false
   return true
 }
@@ -447,12 +465,12 @@ const navigation = computed(() => {
   const app = currentApp.value
 
   if (app === 'hr') {
-    if (!canUseModule('hr')) {
-      return [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
-    }
-    return [
-      { name: 'Apps dashboard', to: '/', icon: HomeIcon },
-      {
+    const enabledCodes = new Set((modules.value || []).map((m) => m.code))
+    const allowWorkspace = hrWorkspaceAllowed.value || enabledCodes.has('hr')
+    const allowMyHr = enabledCodes.has('hr')
+    const items = [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
+    if (allowWorkspace) {
+      items.push({
         name: 'HR workspace',
         to: '/apps/hr',
         icon: HomeIcon,
@@ -462,17 +480,32 @@ const navigation = computed(() => {
           { name: 'Attendance', to: '/apps/hr/attendance' },
           { name: 'Duty rosters', to: '/apps/hr/duty-rosters' },
           { name: 'Settings', to: '/apps/hr/settings' },
-          { name: 'Leave', to: '/apps/hr/leave' },
         ],
-      },
-    ]
+      })
+    }
+    // My HR only if HR module is enabled for the company
+    if (allowMyHr) {
+      items.push({
+        name: 'My HR',
+        to: '/apps/hr/self/attendance',
+        icon: DocumentDuplicateIcon,
+        children: [
+          { name: 'My attendance', to: '/apps/hr/self/attendance' },
+          { name: 'Directory', to: '/apps/hr/self/directory' },
+          { name: 'My leave balance', to: '/apps/hr/self/leaves' },
+          { name: 'My payslips', to: '/apps/hr/self/payslips' },
+          { name: 'Claim invite', to: '/apps/hr/claim' },
+        ],
+      })
+    }
+    return items
   }
 
   if (app === 'accounting') {
     if (!canUseModule('accounting')) {
       return [{ name: 'Apps dashboard', to: '/', icon: HomeIcon }]
     }
-    return [
+    const items = [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
       {
         name: 'Accounting',
@@ -485,10 +518,11 @@ const navigation = computed(() => {
         ],
       },
     ]
+    return items
   }
 
   if (app === 'admin' || isAdminContext.value) {
-    return [
+    const items = [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
       {
         name: 'Admin',
@@ -502,6 +536,7 @@ const navigation = computed(() => {
         ],
       },
     ]
+    return items
   }
 
   // Default / launcher navigation

@@ -8,6 +8,7 @@ use Laravel\Sanctum\Sanctum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Str;
+use App\Models\Permission;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,5 +31,14 @@ class AppServiceProvider extends ServiceProvider
         Model::unguard();
 
         Builder::defaultMorphKeyType('uuid');
+
+        // Ensure core permissions are present (auto-register)
+        $permissions = config('permissions', []);
+        foreach ($permissions as $name) {
+            Permission::firstOrCreate(
+                ['name' => $name, 'guard_name' => 'web'],
+                ['id' => (string) Str::orderedUuid()]
+            );
+        }
     }
 }

@@ -6,6 +6,11 @@ use App\Modules\HR\Http\Controllers\DepartmentController;
 use App\Modules\HR\Http\Controllers\EmployeeController;
 use App\Modules\HR\Http\Controllers\DutyRosterController;
 use App\Modules\HR\Http\Controllers\HrSettingsController;
+use App\Modules\HR\Http\Controllers\SelfAttendanceController;
+use App\Modules\HR\Http\Controllers\EmployeeDirectoryController;
+use App\Modules\HR\Http\Controllers\SelfLeaveController;
+use App\Modules\HR\Http\Controllers\SelfPayslipController;
+use App\Modules\HR\Http\Controllers\EmployeeInvitationController;
 
 // Include the 'api' middleware group so Sanctum's SPA middleware (stateful + CSRF) runs
 Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
@@ -35,4 +40,14 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
         // HR settings
         Route::get('/settings', [HrSettingsController::class, 'show']);
         Route::put('/settings', [HrSettingsController::class, 'update']);
+
+        // Self-service
+        Route::post('/self/attendance/check', [SelfAttendanceController::class, 'check']);
+        Route::get('/self/directory', [EmployeeDirectoryController::class, 'index']);
+        Route::get('/self/leaves/balance', [SelfLeaveController::class, 'balance']);
+        Route::get('/self/payslips', [SelfPayslipController::class, 'index']);
+
+        // Employee invitation/claim
+        Route::post('/employees/invite', [EmployeeInvitationController::class, 'create']);
+        Route::post('/employees/claim', [EmployeeInvitationController::class, 'claim']);
     });

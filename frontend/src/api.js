@@ -262,6 +262,34 @@ export function deleteDutyRoster(rosterId) {
     return api.delete(`/api/v1/hr/duty-rosters/${rosterId}`)
 }
 
+/* ============================================================================
+ * HR self-service
+ * ========================================================================== */
+
+export function selfAttendanceCheck() {
+    return api.post('/api/v1/hr/self/attendance/check')
+}
+
+export function fetchSelfDirectory() {
+    return api.get('/api/v1/hr/self/directory')
+}
+
+export function fetchSelfLeaveBalance() {
+    return api.get('/api/v1/hr/self/leaves/balance')
+}
+
+export function fetchSelfPayslips(params = {}) {
+    return api.get('/api/v1/hr/self/payslips', { params })
+}
+
+export function createEmployeeInvite(payload) {
+    return api.post('/api/v1/hr/employees/invite', payload)
+}
+
+export function claimEmployeeInvite(token) {
+    return api.post('/api/v1/hr/employees/claim', { token })
+}
+
 export function fetchHrSettings() {
     return api.get('/api/v1/hr/settings')
 }

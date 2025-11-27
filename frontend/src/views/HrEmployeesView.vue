@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { fetchDepartmentTree, fetchEmployees, createEmployee, assignEmployeeToUser } from '../api'
+import { fetchDepartmentTree, fetchEmployees, createEmployee, assignEmployeeToUser, createEmployeeInvite } from '../api'
 import {
   Combobox,
   ComboboxButton,
@@ -24,6 +24,10 @@ const assignEmail = ref('')
 const assignEmployeeId = ref(null)
 const assignMessage = ref('')
 const assignError = ref('')
+
+const inviteLinks = ref({})
+const inviteLoadingId = ref(null)
+const inviteError = ref('')
 
 const showCreate = ref(false)
 const createForm = ref({
@@ -174,6 +178,23 @@ const submitAssign = async () => {
   } catch (e) {
     console.error(e)
     assignError.value = e.response?.data?.message || 'Failed to link user.'
+  }
+}
+
+const sendInvite = async (empId) => {
+  inviteError.value = ''
+  inviteLoadingId.value = empId
+  try {
+    const { data } = await createEmployeeInvite({ employee_id: empId })
+    const token = data.data?.token
+    if (token) {
+      inviteLinks.value[empId] = `${window.location.origin}/apps/hr/claim?token=${token}`
+    }
+  } catch (e) {
+    console.error(e)
+    inviteError.value = e.response?.data?.message || 'Failed to generate invite.'
+  } finally {
+    inviteLoadingId.value = null
   }
 }
 
@@ -436,7 +457,7 @@ const submitCreate = async () => {
                   {{ emp.start_date || '—' }}
                 </td>
                 <td class="px-4 py-3 text-right text-sm">
-                  <div class="flex justify-end gap-2">
+                  <div class="flex flex-col items-end gap-2">
                     <button
                       type="button"
                       @click="openAssign(emp.id)"
@@ -450,6 +471,22 @@ const submitCreate = async () => {
                     >
                       Manage
                     </button>
+                    <button
+                      type="button"
+                      class="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 shadow-sm hover:border-indigo-400 hover:text-indigo-600 disabled:opacity-50 dark:border-white/10 dark:text-gray-200 dark:hover:border-indigo-400 dark:hover:text-white"
+                      :disabled="inviteLoadingId === emp.id"
+                      @click="sendInvite(emp.id)"
+                    >
+                      {{ inviteLoadingId === emp.id ? 'Generating…' : 'Invite link' }}
+                    </button>
+                    <div v-if="inviteLinks[emp.id]" class="w-full rounded-md border border-gray-200 bg-gray-50 p-2 text-left text-xs dark:border-white/10 dark:bg-white/5">
+                      <p class="font-semibold text-gray-700 dark:text-gray-200">Share link</p>
+                      <input
+                        :value="inviteLinks[emp.id]"
+                        readonly
+                        class="mt-1 w-full truncate rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] dark:border-white/10 dark:bg-gray-900 dark:text-white"
+                      />
+                    </div>
                   </div>
                 </td>
               </tr>
@@ -466,6 +503,9 @@ const submitCreate = async () => {
           </div>
           <div v-if="error" class="border-t border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/30 dark:bg-red-950/40 dark:text-red-200">
             {{ error }}
+          </div>
+          <div v-if="inviteError" class="border-t border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900/30 dark:bg-amber-950/30 dark:text-amber-200">
+            {{ inviteError }}
           </div>
         </div>
       </div>
