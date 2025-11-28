@@ -9,6 +9,7 @@ use App\Policies\AuditLogPolicy;
 use App\Modules\Projects\Models\WbsItem;
 use App\Modules\Projects\Policies\WbsPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,15 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Allow platform-level roles to bypass gate checks
+        Gate::before(function ($user, $ability) {
+            if (! $user) {
+                return null;
+            }
+            if ($user->hasRole('superadmin') || $user->hasRole('platform_admin')) {
+                return true;
+            }
+            return null;
+        });
     }
 }
