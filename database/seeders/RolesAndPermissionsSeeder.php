@@ -131,7 +131,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Superadmin (only one)
         $superadmin = User::firstOrCreate(
-            ['email' => 'superadmin@example.com'],
+            ['email' => 'saifulla.ahmed@live.com'],
             [
                 'id' => (string) Str::orderedUuid(),
                 'name' => 'Super Admin',

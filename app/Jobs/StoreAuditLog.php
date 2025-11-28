@@ -29,9 +29,15 @@ class StoreAuditLog implements ShouldQueue
 
     public function handle(): void
     {
+        // If company no longer exists (or wasn't set), avoid FK failures
+        $companyId = $this->companyId;
+        if ($companyId && ! \App\Modules\Company\Models\Company::find($companyId)) {
+            $companyId = null;
+        }
+
         AuditLog::create([
             'user_id' => $this->userId,
-            'company_id' => $this->companyId,
+            'company_id' => $companyId,
             'operation_id' => $this->operationId,
             'action' => $this->action,
             'auditable_type' => $this->auditableType,
