@@ -30,6 +30,7 @@ return [
     'projects.manage_procurement',
     'projects.view_wbs',
     'projects.manage_wbs',
+    'projects.approve_tasks',
 
     // Admin / permissions management
     'users.manage_permissions',

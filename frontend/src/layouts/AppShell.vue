@@ -551,6 +551,7 @@ const navigation = computed(() => {
           { name: 'Dashboard', to: '/apps/projects/dashboard' },
           { name: 'Projects', to: '/apps/projects' },
           { name: 'Task assignments', to: '/apps/projects/tasks' },
+          { name: 'Approvals', to: '/apps/projects/approvals' },
           { name: 'WBS', to: '/apps/projects/wbs' },
           { name: 'Islands', to: '/apps/projects/islands' },
           { name: 'Reports', to: '/apps/projects/reports' },
@@ -561,7 +562,7 @@ const navigation = computed(() => {
         to: '/apps/projects/my/tasks',
         icon: DocumentDuplicateIcon,
         children: [
-          { name: 'My WBS items', to: '/apps/projects/my/tasks' },
+          { name: 'My tasks', to: '/apps/projects/my/tasks' },
         ],
       },
     ]

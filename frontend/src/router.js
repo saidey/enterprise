@@ -177,6 +177,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
     },
     {
+        path: '/apps/projects/approvals',
+        name: 'app-projects-approvals',
+        component: () => import('./views/ProjectsApprovalsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
         path: '/admin',
         name: 'app-admin',
         component: () => import('./views/AppAdminView.vue'),

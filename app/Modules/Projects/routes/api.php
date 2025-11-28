@@ -9,6 +9,7 @@ use App\Modules\Projects\Http\Controllers\ProcurementController;
 use App\Modules\Projects\Http\Controllers\CostController;
 use App\Modules\Projects\Http\Controllers\MyTasksController;
 use App\Modules\Projects\Http\Controllers\WbsController;
+use App\Modules\Projects\Http\Controllers\ApprovalController;
 
 Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects'])
     ->prefix('/api/v1/projects')
@@ -22,6 +23,9 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects']
         Route::post('/{project}/wbs', [WbsController::class, 'store']);
         Route::put('/wbs/{wbsItem}', [WbsController::class, 'update']);
         Route::delete('/wbs/{wbsItem}', [WbsController::class, 'destroy']);
+
+        // Approvals (centralized)
+        Route::get('/approvals/tasks', [ApprovalController::class, 'pendingTasks']);
 
         // Islands
         Route::get('/islands', [IslandController::class, 'index']);

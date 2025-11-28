@@ -446,6 +446,10 @@ export function deleteWbs(wbsId) {
     return api.delete(`/api/v1/projects/wbs/${wbsId}`)
 }
 
+export function fetchPendingProjectTasks() {
+    return api.get('/api/v1/projects/approvals/tasks')
+}
+
 /* ============================================================================
  * Operations & session
  * ========================================================================== */

@@ -1,60 +1,51 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { fetchMyProjectTasks, updateProjectTask } from '../api'
+import { fetchPendingProjectTasks, updateProjectTask } from '../api'
 
-const tasks = ref([])
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
-
-const taskStatuses = [
-  { value: 'not_started', label: 'Not started' },
-  { value: 'in_progress', label: 'In progress' },
-  { value: 'pending_review', label: 'Pending review' },
-  { value: 'completed', label: 'Completed' },
-]
+const tasks = ref([])
 
 async function loadTasks() {
   loading.value = true
   error.value = ''
   success.value = ''
   try {
-    const { data } = await fetchMyProjectTasks()
+    const { data } = await fetchPendingProjectTasks()
     tasks.value = data.data || []
   } catch (err) {
     console.error(err)
-    error.value = err.response?.data?.message || 'Failed to load tasks.'
+    error.value = err.response?.data?.message || 'Failed to load approvals.'
   } finally {
     loading.value = false
   }
 }
 
-async function submitForReview(task) {
+async function approve(task) {
   success.value = ''
   error.value = ''
   try {
-    await updateProjectTask(task.id, {
-      status: 'pending_review',
-    })
-    task.status = 'pending_review'
-    success.value = 'Task submitted for review.'
+    await updateProjectTask(task.id, { status: 'completed' })
+    success.value = 'Task approved.'
+    tasks.value = tasks.value.filter((t) => t.id !== task.id)
   } catch (err) {
     console.error(err)
-    error.value = err.response?.data?.message || 'Failed to update task.'
+    error.value = err.response?.data?.message || 'Failed to approve task.'
   }
 }
 
-async function updateStatus(task, status) {
+async function sendBack(task) {
   success.value = ''
   error.value = ''
   try {
-    await updateProjectTask(task.id, { status })
-    task.status = status
-    success.value = 'Task updated.'
+    await updateProjectTask(task.id, { status: 'in_progress' })
+    success.value = 'Task sent back to assignee.'
+    tasks.value = tasks.value.filter((t) => t.id !== task.id)
   } catch (err) {
     console.error(err)
-    error.value = err.response?.data?.message || 'Failed to update task.'
+    error.value = err.response?.data?.message || 'Failed to send back task.'
   }
 }
 
@@ -65,13 +56,13 @@ onMounted(loadTasks)
   <AppShell>
     <div class="space-y-6">
       <header class="border-b border-gray-200 pb-4 dark:border-white/10">
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Projects / My tasks</p>
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">My assigned tasks</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Update tasks assigned to you across all projects.</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Projects / Approvals</p>
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Task approvals</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Review and approve tasks submitted by team members.</p>
       </header>
 
       <div v-if="loading" class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 shadow-sm dark:border-white/10 dark:bg-gray-900 dark:text-gray-200">
-        Loading tasks…
+        Loading approvals…
       </div>
       <div v-else-if="error" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-950/40 dark:text-red-200">
         {{ error }}
@@ -80,7 +71,7 @@ onMounted(loadTasks)
         <div v-if="success" class="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/30 dark:text-emerald-200">
           {{ success }}
         </div>
-        <div class="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
+        <div class="overflow-hidden rounded-xl border border-gray-200 shadow-sm dark:border-white/10">
           <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
             <thead class="bg-gray-50 dark:bg-white/5">
               <tr>
@@ -88,7 +79,6 @@ onMounted(loadTasks)
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Project</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Due</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">WBS</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
@@ -96,7 +86,7 @@ onMounted(loadTasks)
               <tr v-for="task in tasks" :key="task.id" class="hover:bg-gray-50 dark:hover:bg-white/5">
                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
                   <div class="font-semibold">{{ task.name }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ task.phase?.name || '' }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Submitted by: {{ task.assigned_to_name || '—' }}</div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   {{ task.project?.name || '—' }}
@@ -110,61 +100,27 @@ onMounted(loadTasks)
                   </div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  <span
-                    :class="[
-                      'inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold',
-                      task.status === 'completed'
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
-                        : task.status === 'pending_review'
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'
-                        : task.status === 'in_progress'
-                        ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200'
-                        : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200',
-                    ]"
-                  >
-                    {{ taskStatuses.find((s) => s.value === task.status)?.label || task.status }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   <div class="flex items-center gap-2">
                     <button
-                      v-if="task.status !== 'pending_review' && task.status !== 'completed'"
-                      type="button"
-                      class="rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                      @click="submitForReview(task)"
-                    >
-                      Complete
-                    </button>
-                    <button
-                      v-if="task.status === 'pending_review'"
-                      type="button"
-                      class="rounded-md bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-300 dark:bg-white/10 dark:text-white"
-                      disabled
-                    >
-                      Awaiting approval
-                    </button>
-                    <button
-                      v-if="task.status === 'completed'"
                       type="button"
                       class="rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400"
-                      disabled
+                      @click="approve(task)"
                     >
-                      Completed
+                      Approve
                     </button>
                     <button
-                      v-if="task.status === 'pending_review'"
                       type="button"
                       class="rounded-md bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-300 dark:bg-white/10 dark:text-white"
-                      @click="updateStatus(task, 'in_progress')"
+                      @click="sendBack(task)"
                     >
-                      Undo submit
+                      Send back
                     </button>
                   </div>
                 </td>
               </tr>
               <tr v-if="!tasks.length">
                 <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                  No tasks assigned to you yet.
+                  No tasks awaiting approval.
                 </td>
               </tr>
             </tbody>
