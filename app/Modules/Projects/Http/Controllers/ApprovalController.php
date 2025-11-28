@@ -29,7 +29,12 @@ class ApprovalController extends Controller
                 'wbsItem:id,project_id,code,title',
             ])
             ->orderBy('due_date')
-            ->get();
+            ->get()
+            ->map(function (ProjectTask $task) {
+                $task->due_date_human = $task->due_date ? $task->due_date->toDayDateTimeString() : null;
+                $task->created_at_human = $task->created_at ? $task->created_at->toDayDateTimeString() : null;
+                return $task;
+            });
 
         return response()->json(['data' => $tasks]);
     }

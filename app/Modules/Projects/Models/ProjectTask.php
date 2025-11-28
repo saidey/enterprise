@@ -7,6 +7,8 @@ use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
 use App\Modules\Projects\Models\WbsItem;
+use App\Modules\Projects\Models\ProjectTaskAttachment;
+use App\Modules\Projects\Models\ProjectTaskComment;
 
 class ProjectTask extends Model
 {
@@ -45,5 +47,15 @@ class ProjectTask extends Model
     public function wbsItem()
     {
         return $this->belongsTo(WbsItem::class);
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(ProjectTaskAttachment::class, 'project_task_id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(ProjectTaskComment::class, 'project_task_id')->latest();
     }
 }

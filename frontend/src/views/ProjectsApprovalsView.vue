@@ -8,6 +8,21 @@ const error = ref('')
 const success = ref('')
 const tasks = ref([])
 
+const fmtDateTime = (value) => {
+  if (!value) return '—'
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(value))
+  } catch (e) {
+    return value
+  }
+}
+
 async function loadTasks() {
   loading.value = true
   error.value = ''
@@ -92,7 +107,7 @@ onMounted(loadTasks)
                   {{ task.project?.name || '—' }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  {{ task.due_date || '—' }}
+                  {{ fmtDateTime(task.due_date) }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   <div class="text-xs text-gray-600 dark:text-gray-300">

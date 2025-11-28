@@ -450,6 +450,34 @@ export function fetchPendingProjectTasks() {
     return api.get('/api/v1/projects/approvals/tasks')
 }
 
+export function fetchProjectUsers() {
+    return api.get('/api/v1/projects/users')
+}
+
+export function fetchTaskAttachments(taskId) {
+    return api.get(`/api/v1/projects/tasks/${taskId}/attachments`)
+}
+
+export function uploadTaskAttachment(taskId, file) {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post(`/api/v1/projects/tasks/${taskId}/attachments`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    })
+}
+
+export function deleteTaskAttachment(attachmentId) {
+    return api.delete(`/api/v1/projects/attachments/${attachmentId}`)
+}
+
+export function fetchTaskComments(taskId) {
+    return api.get(`/api/v1/projects/tasks/${taskId}/comments`)
+}
+
+export function createTaskComment(taskId, payload) {
+    return api.post(`/api/v1/projects/tasks/${taskId}/comments`, payload)
+}
+
 /* ============================================================================
  * Operations & session
  * ========================================================================== */

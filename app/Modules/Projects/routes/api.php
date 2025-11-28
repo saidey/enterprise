@@ -10,6 +10,9 @@ use App\Modules\Projects\Http\Controllers\CostController;
 use App\Modules\Projects\Http\Controllers\MyTasksController;
 use App\Modules\Projects\Http\Controllers\WbsController;
 use App\Modules\Projects\Http\Controllers\ApprovalController;
+use App\Modules\Projects\Http\Controllers\TaskAttachmentController;
+use App\Modules\Projects\Http\Controllers\TaskCommentController;
+use App\Modules\Projects\Http\Controllers\ProjectUserController;
 
 Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects'])
     ->prefix('/api/v1/projects')
@@ -51,6 +54,12 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects']
         Route::post('/{project}/tasks', [TaskController::class, 'store']);
         Route::put('/tasks/{task}', [TaskController::class, 'update']);
         Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+        Route::get('/tasks/{task}/attachments', [TaskAttachmentController::class, 'index']);
+        Route::post('/tasks/{task}/attachments', [TaskAttachmentController::class, 'store']);
+        Route::delete('/attachments/{attachment}', [TaskAttachmentController::class, 'destroy']);
+        Route::get('/tasks/{task}/comments', [TaskCommentController::class, 'index']);
+        Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store']);
+        Route::get('/users', [ProjectUserController::class, 'index']);
 
         // Procurement
         Route::get('/{project}/procurement', [ProcurementController::class, 'index']);

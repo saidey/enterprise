@@ -21,7 +21,11 @@ class MyTasksController extends Controller
             ->where('assigned_to', $user->id)
             ->with(['project:id,name,code', 'wbsItem:id,project_id,code,title'])
             ->orderBy('due_date')
-            ->get();
+            ->get()
+            ->map(function (ProjectTask $task) {
+                $task->due_date_human = $task->due_date ? $task->due_date->toFormattedDateString() : null;
+                return $task;
+            });
 
         return response()->json(['data' => $tasks]);
     }

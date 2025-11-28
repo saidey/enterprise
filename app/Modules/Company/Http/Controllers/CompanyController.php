@@ -41,10 +41,13 @@ class CompanyController extends Controller
             'subscription_status' => 'active',
         ]);
 
-        $company->users()->attach($user->id, [
-            'role' => 'owner',
-            'is_owner' => true,
-            'is_default' => true,
+        // Ensure creator is attached as owner
+        $company->users()->syncWithoutDetaching([
+            $user->id => [
+                'role' => 'owner',
+                'is_owner' => true,
+                'is_default' => true,
+            ],
         ]);
 
         session(['current_company_id' => $company->id]);

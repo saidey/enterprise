@@ -6,7 +6,7 @@ import {
   fetchProjectTasks,
   fetchWbs,
   updateProjectTask,
-  fetchUsersForAdmin,
+  fetchProjectUsers,
   createProjectTask,
 } from '../api'
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
@@ -77,8 +77,11 @@ async function loadProjects() {
 
 async function loadUsers() {
   try {
-    const { data } = await fetchUsersForAdmin({ per_page: 100 })
+    const { data } = await fetchProjectUsers()
     users.value = data.data || []
+    if (!users.value.length) {
+      error.value = 'No company users found. Make sure the current company has members.'
+    }
   } catch (err) {
     console.error('Failed to load users', err)
   }

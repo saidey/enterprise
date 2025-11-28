@@ -1,12 +1,26 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { fetchMyProjectTasks, updateProjectTask } from '../api'
+import {
+  fetchMyProjectTasks,
+  updateProjectTask,
+  fetchTaskAttachments,
+  uploadTaskAttachment,
+  deleteTaskAttachment,
+  fetchTaskComments,
+  createTaskComment,
+} from '../api'
 
 const tasks = ref([])
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
+const activeTaskId = ref('')
+const attachments = ref({})
+const comments = ref({})
+const commentDrafts = ref({})
+const uploadingId = ref('')
+const showModal = ref(false)
 
 const taskStatuses = [
   { value: 'not_started', label: 'Not started' },
@@ -14,6 +28,19 @@ const taskStatuses = [
   { value: 'pending_review', label: 'Pending review' },
   { value: 'completed', label: 'Completed' },
 ]
+
+const fmtDate = (value) => {
+  if (!value) return '—'
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date(value))
+  } catch (e) {
+    return value
+  }
+}
 
 async function loadTasks() {
   loading.value = true
@@ -27,6 +54,32 @@ async function loadTasks() {
     error.value = err.response?.data?.message || 'Failed to load tasks.'
   } finally {
     loading.value = false
+  }
+}
+
+async function setActiveTask(taskId) {
+  activeTaskId.value = taskId
+  await Promise.all([loadAttachments(taskId), loadComments(taskId)])
+  showModal.value = true
+}
+
+async function loadAttachments(taskId) {
+  attachments.value = { ...attachments.value, [taskId]: { loading: true, items: [] } }
+  try {
+    const { data } = await fetchTaskAttachments(taskId)
+    attachments.value[taskId] = { loading: false, items: data.data || [] }
+  } catch (err) {
+    attachments.value[taskId] = { loading: false, items: [] }
+  }
+}
+
+async function loadComments(taskId) {
+  comments.value = { ...comments.value, [taskId]: { loading: true, items: [] } }
+  try {
+    const { data } = await fetchTaskComments(taskId)
+    comments.value[taskId] = { loading: false, items: data.data || [] }
+  } catch (err) {
+    comments.value[taskId] = { loading: false, items: [] }
   }
 }
 
@@ -55,6 +108,51 @@ async function updateStatus(task, status) {
   } catch (err) {
     console.error(err)
     error.value = err.response?.data?.message || 'Failed to update task.'
+  }
+}
+
+async function handleUpload(task, event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+  uploadingId.value = task.id
+  error.value = ''
+  success.value = ''
+  try {
+    await uploadTaskAttachment(task.id, file)
+    await loadAttachments(task.id)
+    success.value = 'Attachment uploaded.'
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to upload attachment.'
+  } finally {
+    uploadingId.value = ''
+    event.target.value = ''
+  }
+}
+
+async function removeAttachment(taskId, attachmentId) {
+  success.value = ''
+  error.value = ''
+  try {
+    await deleteTaskAttachment(attachmentId)
+    await loadAttachments(taskId)
+    success.value = 'Attachment removed.'
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to delete attachment.'
+  }
+}
+
+async function addComment(taskId) {
+  const body = commentDrafts.value[taskId]
+  if (!body || !body.trim()) return
+  success.value = ''
+  error.value = ''
+  try {
+    await createTaskComment(taskId, { body })
+    commentDrafts.value[taskId] = ''
+    await loadComments(taskId)
+    success.value = 'Comment added.'
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to add comment.'
   }
 }
 
@@ -95,14 +193,19 @@ onMounted(loadTasks)
             <tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
               <tr v-for="task in tasks" :key="task.id" class="hover:bg-gray-50 dark:hover:bg-white/5">
                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                  <div class="font-semibold">{{ task.name }}</div>
+                  <div class="flex items-center justify-between gap-2">
+                    <div>
+                      <div class="font-semibold">{{ task.name }}</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400">{{ task.phase?.name || '' }}</div>
+                    </div>
+                  </div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">{{ task.phase?.name || '' }}</div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   {{ task.project?.name || '—' }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  {{ task.due_date || '—' }}
+                  {{ task.due_date_human || fmtDate(task.due_date) }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   <div class="text-xs text-gray-600 dark:text-gray-300">
@@ -127,6 +230,18 @@ onMounted(loadTasks)
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2">
+                      <label class="text-xs text-gray-500 dark:text-gray-400">Status:</label>
+                      <select
+                        v-model="task.status"
+                        class="rounded-md border border-gray-200 px-2 py-1 text-xs dark:border-white/10 dark:bg-gray-900 dark:text-white"
+                        :disabled="task.status === 'completed'"
+                        @change="updateStatus(task, task.status)"
+                      >
+                        <option value="not_started">Not started</option>
+                        <option value="in_progress">In progress</option>
+                      </select>
+                    </div>
                     <button
                       v-if="task.status !== 'pending_review' && task.status !== 'completed'"
                       type="button"
@@ -152,6 +267,13 @@ onMounted(loadTasks)
                       Completed
                     </button>
                     <button
+                      type="button"
+                      class="rounded-md bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-800 hover:bg-gray-200 dark:bg-white/10 dark:text-white"
+                      @click="setActiveTask(task.id)"
+                    >
+                      Open Task
+                    </button>
+                    <button
                       v-if="task.status === 'pending_review'"
                       type="button"
                       class="rounded-md bg-slate-200 px-3 py-1 text-xs font-semibold text-slate-800 hover:bg-slate-300 dark:bg-white/10 dark:text-white"
@@ -169,6 +291,110 @@ onMounted(loadTasks)
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Detail modal -->
+        <div
+          v-if="showModal && activeTaskId"
+          class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4"
+          @click.self="showModal = false"
+        >
+          <div class="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-gray-900">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Task details</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ tasks.find((t) => t.id === activeTaskId)?.name }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200 dark:bg-white/10 dark:text-white"
+                @click="showModal = false"
+              >
+                Close
+              </button>
+            </div>
+            <div class="mt-4 grid gap-4 md:grid-cols-2">
+              <div>
+                <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Attachments</h4>
+                <div class="mt-2 space-y-2 rounded-lg border border-gray-100 p-3 dark:border-white/10 dark:bg-white/5">
+                  <div v-if="attachments[activeTaskId]?.loading" class="text-xs text-gray-500 dark:text-gray-400">Loading attachments…</div>
+                  <div v-else-if="!attachments[activeTaskId]?.items?.length" class="text-xs text-gray-500 dark:text-gray-400">No attachments yet.</div>
+                  <ul v-else class="space-y-2">
+                    <li
+                      v-for="att in attachments[activeTaskId].items"
+                      :key="att.id"
+                      class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm dark:bg-white/5"
+                    >
+                      <div class="min-w-0">
+                        <p class="truncate font-medium text-gray-900 dark:text-white">{{ att.original_name || att.path }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ att.mime_type || 'file' }}</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <a
+                          :href="att.url || `/storage/${att.path}`"
+                          target="_blank"
+                          rel="noreferrer"
+                          class="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                        >
+                          Open
+                        </a>
+                        <button
+                          type="button"
+                          class="text-xs font-semibold text-red-600 hover:text-red-500 dark:text-red-400"
+                          @click="removeAttachment(activeTaskId, att.id)"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  </ul>
+                  <label
+                    class="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:border-white/20 dark:text-gray-200 dark:hover:border-indigo-400"
+                  >
+                    <input type="file" class="hidden" :disabled="uploadingId === activeTaskId" @change="(e) => handleUpload(tasks.find((t) => t.id === activeTaskId), e)" />
+                    <span>{{ uploadingId === activeTaskId ? 'Uploading…' : 'Upload file' }}</span>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Comments</h4>
+                <div class="mt-2 space-y-2 rounded-lg border border-gray-100 p-3 dark:border-white/10 dark:bg-white/5">
+                  <div v-if="comments[activeTaskId]?.loading" class="text-xs text-gray-500 dark:text-gray-400">Loading comments…</div>
+                  <div v-else-if="!comments[activeTaskId]?.items?.length" class="text-xs text-gray-500 dark:text-gray-400">No comments yet.</div>
+                  <ul v-else class="space-y-2">
+                    <li
+                      v-for="c in comments[activeTaskId].items"
+                      :key="c.id"
+                      class="rounded-md bg-gray-50 px-3 py-2 text-sm dark:bg-white/5"
+                    >
+                      <div class="flex items-center justify-between">
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ c.user?.name || c.user?.email || 'User' }}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">{{ c.created_at_human || fmtDate(c.created_at) }}</span>
+                      </div>
+                      <p class="text-sm text-gray-800 dark:text-gray-200">{{ c.body }}</p>
+                    </li>
+                  </ul>
+                  <div class="mt-2 space-y-2">
+                    <textarea
+                      v-model="commentDrafts[activeTaskId]"
+                      rows="2"
+                      class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+                      placeholder="Add a comment"
+                    ></textarea>
+                    <button
+                      type="button"
+                      class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                      @click="addComment(activeTaskId)"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
