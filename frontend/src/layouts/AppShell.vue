@@ -57,27 +57,28 @@
                     <li>
                       <ul class="-mx-2 space-y-1">
                         <li v-for="item in navigation" :key="item.name" class="space-y-1">
-                          <router-link
-                            :to="item.to"
-                            @click="sidebarOpen = false"
+                          <component
+                            :is="item.external ? 'a' : 'router-link'"
+                            v-bind="item.external ? { href: item.href, target: '_self' } : { to: item.to, onClick: () => (sidebarOpen = false) }"
                             :class="[
-                              isCurrentRoute(item.to)
-                                ? 'bg-gray-50 text-indigo-600 dark:bg-white/5 dark:text-white'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-white/5',
+                              item.external ? 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-white/5' :
+                              (isCurrentRoute(item.to)
+                                ? 'bg-gray-50 text-indigo-600 dark:bg:white/5 dark:text-white'
+                                : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-white/5'),
                               'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold'
                             ]"
                           >
                             <component
                               :is="item.icon"
                               :class="[
-                                isCurrentRoute(item.to)
+                                !item.external && isCurrentRoute(item.to)
                                   ? 'text-indigo-600 dark:text-white'
                                   : 'text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-white',
                                 'size-6 shrink-0'
                               ]"
                             />
                             <span class="flex-1">{{ item.name }}</span>
-                          </router-link>
+                          </component>
                           <ul
                             v-if="item.children?.length"
                             class="ml-10 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10"
@@ -139,26 +140,29 @@
             <li>
               <ul class="-mx-2 space-y-1">
                 <li v-for="item in navigation" :key="item.name" class="space-y-1">
-                  <router-link
-                    :to="item.to"
+                  <component
+                    :is="item.external ? 'a' : 'router-link'"
+                    v-bind="item.external ? { href: item.href, target: '_self' } : { to: item.to }"
                     :class="[
-                      isCurrentRoute(item.to)
-                        ? 'bg-gray-50 text-indigo-600 dark:bg-white/5 dark:text-white'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-white/5',
+                      item.external
+                        ? 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-white/5'
+                        : (isCurrentRoute(item.to)
+                          ? 'bg-gray-50 text-indigo-600 dark:bg-white/5 dark:text-white'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-white/5'),
                       'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold'
                     ]"
                   >
                     <component
                       :is="item.icon"
                       :class="[
-                        isCurrentRoute(item.to)
+                        !item.external && isCurrentRoute(item.to)
                           ? 'text-indigo-600 dark:text-white'
                           : 'text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-white',
                         'size-6 shrink-0'
                       ]"
                     />
                     <span class="flex-1">{{ item.name }}</span>
-                  </router-link>
+                  </component>
                   <ul v-if="item.children?.length" class="ml-10 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10">
                     <li v-for="child in item.children" :key="child.name">
                       <router-link
@@ -375,6 +379,7 @@ import { logoutRequest } from '../api'
 import { resetCachedUser } from '../router'
 import { useSession } from '../composables/useSession'
 import { moduleRegistry } from '../constants/modules'
+import { apiInstance } from '../api'
 
 import {
   Dialog,
@@ -451,6 +456,14 @@ const isAdminContext = computed(() => {
 
 const isPlatformContext = computed(() => currentApp.value === 'platform' || route.path.startsWith('/administrator'))
 
+const apiBase = computed(() => {
+  const base = apiInstance?.defaults?.baseURL || ''
+  if (base) {
+    return base.replace(/\/+$/, '')
+  }
+  return window.location.origin
+})
+
 const currentAppLabel = computed(() => {
   switch (currentApp.value) {
     case 'hr':
@@ -485,6 +498,15 @@ const canUseModule = (key) => {
 
 const navigation = computed(() => {
   const app = currentApp.value
+
+  // Platform context: dedicated nav only
+  if (isPlatformContext.value) {
+    return [
+      { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
+      { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
+      { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },
+    ]
+  }
 
   if (app === 'hr') {
     const enabledCodes = new Set((modules.value || []).map((m) => m.code))

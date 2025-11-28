@@ -11,6 +11,9 @@ const api = axios.create({
     xsrfHeaderName: 'X-XSRF-TOKEN',
 })
 
+// exported for consumers that need the base URL (e.g., external links)
+export { api as apiInstance }
+
 /* ============================================================================
  * CSRF / Cookie helpers
  * ========================================================================== */

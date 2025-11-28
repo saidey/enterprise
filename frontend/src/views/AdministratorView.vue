@@ -1,5 +1,15 @@
 <script setup>
+import { computed } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
+import { apiInstance } from '../api'
+
+const apiBase = computed(() => {
+  const base = apiInstance?.defaults?.baseURL || ''
+  if (base) {
+    return base.replace(/\/+$/, '')
+  }
+  return window.location.origin
+})
 </script>
 
 <template>
@@ -15,7 +25,7 @@ import AppShell from '../layouts/AppShell.vue'
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
           <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Queues (Horizon)</h2>
           <p class="text-sm text-gray-600 dark:text-gray-400">Monitor jobs and workers.</p>
-          <a href="/horizon" class="mt-2 inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+          <a :href="`${apiBase}/horizon`" class="mt-2 inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
             Open Horizon
           </a>
         </div>
@@ -23,7 +33,7 @@ import AppShell from '../layouts/AppShell.vue'
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
           <h2 class="text-sm font-semibold text-gray-900 dark:text-white">Pulse</h2>
           <p class="text-sm text-gray-600 dark:text-gray-400">View application telemetry.</p>
-          <a href="/pulse" class="mt-2 inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+          <a :href="`${apiBase}/pulse`" class="mt-2 inline-flex items-center text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
             Open Pulse
           </a>
         </div>
