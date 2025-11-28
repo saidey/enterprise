@@ -256,35 +256,35 @@ onMounted(async () => {
                   {{ creating ? 'Saving…' : 'Add task' }}
                 </button>
               </div>
-              <div class="mt-3 grid gap-3 md:grid-cols-4">
-                <div class="md:col-span-2">
-                  <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Name</label>
-                  <input
-                    v-model="newTask.name"
-                    type="text"
-                    class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
-                    placeholder="Task title"
-                  />
-                </div>
-                <div>
-                  <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Due date</label>
-                  <input
-                    v-model="newTask.due_date"
-                    type="date"
-                    class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Status</label>
-                  <Listbox v-model="newTask.status">
-                    <div class="relative mt-1">
-                      <ListboxButton
-                        class="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-2 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-gray-900 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500"
-                      >
-                        <span class="col-start-1 row-start-1 flex items-center gap-2 pr-6">
-                          <span class="block truncate">{{ statusOptions.find((s) => s.value === newTask.status)?.label || 'Select' }}</span>
-                        </span>
-                        <ChevronUpDownIcon class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400" aria-hidden="true" />
+                <div class="mt-3 grid gap-3 md:grid-cols-4">
+                  <div class="md:col-span-2">
+                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Name</label>
+                    <input
+                      v-model="newTask.name"
+                      type="text"
+                      class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm bg-white outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500"
+                      placeholder="Task title"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Due date</label>
+                    <input
+                      v-model="newTask.due_date"
+                      type="date"
+                      class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm bg-white outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 dark:border-white/10 dark:bg-gray-900 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Status</label>
+                    <Listbox v-model="newTask.status">
+                      <div class="relative mt-1">
+                        <ListboxButton
+                          class="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-2 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600 sm:text-sm/6 dark:bg-gray-900 dark:text-white dark:outline-white/10 dark:focus-visible:outline-indigo-500"
+                        >
+                          <span class="col-start-1 row-start-1 flex items-center gap-2 pr-6">
+                            <span class="block truncate">{{ statusOptions.find((s) => s.value === newTask.status)?.label || 'Select' }}</span>
+                          </span>
+                          <ChevronUpDownIcon class="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4 dark:text-gray-400" aria-hidden="true" />
                       </ListboxButton>
                       <transition leave-active-class="transition ease-in duration-100" leave-from-class="" leave-to-class="opacity-0">
                         <ListboxOptions
