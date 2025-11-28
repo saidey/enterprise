@@ -84,6 +84,7 @@ async function loadUsers() {
     }
   } catch (err) {
     console.error('Failed to load users', err)
+    error.value = err.response?.data?.message || 'Failed to load users.'
   }
 }
 

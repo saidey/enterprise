@@ -21,6 +21,9 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects']
         Route::get('/my/tasks', [MyTasksController::class, 'index']);
         Route::get('/my/wbs', [WbsController::class, 'my']);
 
+        // Company users for assignment (place before project wildcard)
+        Route::get('/users', [ProjectUserController::class, 'index']);
+
         // WBS
         Route::get('/{project}/wbs', [WbsController::class, 'index']);
         Route::post('/{project}/wbs', [WbsController::class, 'store']);
@@ -59,7 +62,6 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects']
         Route::delete('/attachments/{attachment}', [TaskAttachmentController::class, 'destroy']);
         Route::get('/tasks/{task}/comments', [TaskCommentController::class, 'index']);
         Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store']);
-        Route::get('/users', [ProjectUserController::class, 'index']);
 
         // Procurement
         Route::get('/{project}/procurement', [ProcurementController::class, 'index']);

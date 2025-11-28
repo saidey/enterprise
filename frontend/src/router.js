@@ -81,6 +81,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
     },
     {
+        path: '/apps/hr/users',
+        name: 'app-hr-users',
+        component: () => import('./views/HrUsersView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'hr' },
+    },
+    {
         path: '/apps/hr/settings',
         name: 'app-hr-settings',
         component: () => import('./views/HrSettingsView.vue'),

@@ -5,6 +5,7 @@ namespace App\Modules\HR\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Modules\HR\Models\Employee;
 
 class UserDirectoryController extends Controller
 {
@@ -23,5 +24,47 @@ class UserDirectoryController extends Controller
             ->get();
 
         return response()->json(['data' => $users]);
+    }
+
+    public function attachEmployee(Request $request, User $user)
+    {
+        $this->authorize('hr.manage_employees');
+        $company = currentCompany();
+        abort_unless($company, 428, 'No company selected.');
+
+        abort_unless($company->users()->where('users.id', $user->id)->exists(), 403, 'User does not belong to this company.');
+
+        $data = $request->validate([
+            'employee_id' => ['required', 'uuid'],
+        ]);
+
+        $employee = Employee::where('company_id', $company->id)->findOrFail($data['employee_id']);
+        $employee->user_id = $user->id;
+        $employee->save();
+
+        return response()->json([
+            'message' => 'Employee attached to user.',
+            'data' => $employee,
+        ]);
+    }
+
+    public function destroy(Request $request, User $user)
+    {
+        $this->authorize('hr.manage_employees');
+        $company = currentCompany();
+        abort_unless($company, 428, 'No company selected.');
+
+        // prevent removing yourself to avoid lockout
+        abort_if($request->user()->id === $user->id, 403, 'You cannot remove yourself.');
+
+        abort_unless($company->users()->where('users.id', $user->id)->exists(), 404, 'User not in this company.');
+
+        // Detach user from company and unlink any employees in this company
+        $company->users()->detach($user->id);
+        Employee::where('company_id', $company->id)
+            ->where('user_id', $user->id)
+            ->update(['user_id' => null]);
+
+        return response()->json(['message' => 'User removed from company.']);
     }
 }

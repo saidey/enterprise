@@ -12,10 +12,6 @@ class ProjectUserController extends Controller
     {
         $user = $request->user();
         abort_unless($user, 401);
-        // Only project managers/admins can assign tasks
-        if (! $user->can('projects.manage') && ! $user->can('projects.manage_wbs')) {
-            abort(403, 'You are not allowed to assign tasks.');
-        }
 
         $company = currentCompany();
         abort_unless($company, 428, 'No company selected.');

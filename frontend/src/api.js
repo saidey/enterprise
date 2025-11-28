@@ -488,6 +488,22 @@ export function fetchMyOperations() {
     return api.get('/api/operations/my')
 }
 
+/* ============================================================================
+ * HR users
+ * ========================================================================== */
+
+export function fetchHrUsers() {
+    return api.get('/api/v1/hr/users')
+}
+
+export function attachEmployeeToUser(userId, employeeId) {
+    return api.post(`/api/v1/hr/users/${userId}/attach-employee`, { employee_id: employeeId })
+}
+
+export function removeHrUser(userId) {
+    return api.delete(`/api/v1/hr/users/${userId}`)
+}
+
 // Create a new operation under the *current company*
 export function createOperation(payload) {
     // e.g. { name, code, description, ... }

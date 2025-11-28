@@ -479,6 +479,7 @@ const navigation = computed(() => {
           { name: 'Employees', to: '/apps/hr/employees' },
           { name: 'Attendance', to: '/apps/hr/attendance' },
           { name: 'Duty rosters', to: '/apps/hr/duty-rosters' },
+          { name: 'Users', to: '/apps/hr/users' },
           { name: 'Settings', to: '/apps/hr/settings' },
         ],
       })

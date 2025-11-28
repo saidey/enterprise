@@ -11,6 +11,7 @@ use App\Modules\HR\Http\Controllers\EmployeeDirectoryController;
 use App\Modules\HR\Http\Controllers\SelfLeaveController;
 use App\Modules\HR\Http\Controllers\SelfPayslipController;
 use App\Modules\HR\Http\Controllers\EmployeeInvitationController;
+use App\Modules\HR\Http\Controllers\UserDirectoryController;
 
 // Include the 'api' middleware group so Sanctum's SPA middleware (stateful + CSRF) runs
 Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
@@ -50,4 +51,9 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
         // Employee invitation/claim
         Route::post('/employees/invite', [EmployeeInvitationController::class, 'create']);
         Route::post('/employees/claim', [EmployeeInvitationController::class, 'claim']);
+
+        // Users (non-employee directory)
+        Route::get('/users', [UserDirectoryController::class, 'index']);
+        Route::post('/users/{user}/attach-employee', [UserDirectoryController::class, 'attachEmployee']);
+        Route::delete('/users/{user}', [UserDirectoryController::class, 'destroy']);
     });
