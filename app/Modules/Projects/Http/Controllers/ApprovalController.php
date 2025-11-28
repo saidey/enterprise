@@ -14,7 +14,7 @@ class ApprovalController extends Controller
         abort_unless($user, 401);
         // Only specific approvers (or platform/super admins) can approve
         $isPlatformAdmin = $user->hasRole('superadmin') || $user->hasRole('platform_admin');
-        if (! $isPlatformAdmin && ! $user->can('projects.approve_tasks')) {
+        if (! $isPlatformAdmin && ! ($user->can('projects.approve_tasks') || $user->can('projects.manage') || $user->can('users.manage_permissions'))) {
             abort(403, 'You are not allowed to approve tasks.');
         }
 

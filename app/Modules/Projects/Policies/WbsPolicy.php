@@ -35,24 +35,23 @@ class WbsPolicy
 
     protected function hasProjectAccess(User $user, Project $project): bool
     {
-        if (! $this->isInCompany($user, $project->company_id)) {
-            return false;
-        }
-
-        return $this->hasAnyPermission($user);
+        return $this->hasAnyPermission($user) && $this->isInCompany($user, $project->company_id);
     }
 
     protected function hasProjectAccessByCompany(User $user, string $companyId): bool
     {
-        if (! $this->isInCompany($user, $companyId)) {
-            return false;
-        }
-
-        return $this->hasAnyPermission($user);
+        return $this->hasAnyPermission($user) && $this->isInCompany($user, $companyId);
     }
 
     protected function isInCompany(User $user, string $companyId): bool
     {
+        if (
+            $user->hasRole('superadmin')
+            || $user->hasRole('platform_admin')
+            || $user->can('users.manage_permissions')
+        ) {
+            return true;
+        }
         return $user->companies()->where('companies.id', $companyId)->exists();
     }
 
@@ -66,6 +65,7 @@ class WbsPolicy
         return $user->can('projects.manage_wbs')
             || $user->can('projects.manage')
             || $user->can('projects.view_wbs')
-            || $user->can('projects.view');
+            || $user->can('projects.view')
+            || $user->can('users.manage_permissions'); // admins with permission tooling can still access
     }
 }

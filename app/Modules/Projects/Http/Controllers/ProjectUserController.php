@@ -21,6 +21,11 @@ class ProjectUserController extends Controller
             $company->users()->syncWithoutDetaching([$user->id => ['role' => 'member', 'is_owner' => false]]);
         }
 
+        // Basic permission gate for assignment UI
+        if (! ($user->can('projects.manage') || $user->can('projects.manage_wbs') || $user->can('users.manage_permissions') || $user->hasRole('superadmin') || $user->hasRole('platform_admin'))) {
+            abort(403, 'Not allowed to list users.');
+        }
+
         $users = User::query()
             ->select('users.id', 'users.name', 'users.email')
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
