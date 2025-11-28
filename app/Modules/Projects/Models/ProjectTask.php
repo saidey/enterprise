@@ -6,6 +6,7 @@ use App\Models\Traits\Auditable;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
+use App\Modules\Projects\Models\WbsItem;
 
 class ProjectTask extends Model
 {
@@ -16,6 +17,7 @@ class ProjectTask extends Model
     protected $fillable = [
         'company_id',
         'project_id',
+        'wbs_item_id',
         'phase_id',
         'assigned_to',
         'name',
@@ -38,5 +40,10 @@ class ProjectTask extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function wbsItem()
+    {
+        return $this->belongsTo(WbsItem::class);
     }
 }

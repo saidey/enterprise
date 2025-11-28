@@ -19,7 +19,7 @@ class RoleManagementController extends Controller
         $roles = Role::with('permissions:id,name')
             ->when(! $actorIsSuper, fn ($q) => $q->where('role_scope', 'company'))
             ->orderBy('name')
-            ->get(['id', 'name', 'role_scope']);
+            ->get(['id', 'name', 'description', 'role_scope']);
 
         return response()->json(['data' => $roles]);
     }

@@ -141,6 +141,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
     },
     {
+        path: '/apps/projects/tasks',
+        name: 'app-projects-tasks',
+        component: () => import('./views/ProjectsTaskAssignmentsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'projects' },
+    },
+    {
         path: '/apps/projects/islands',
         name: 'app-projects-islands',
         component: () => import('./views/ProjectsIslandsView.vue'),

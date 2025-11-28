@@ -5,6 +5,7 @@ namespace App\Modules\Projects\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Projects\Models\Project;
 use App\Modules\Projects\Models\ProjectTask;
+use App\Modules\Projects\Models\WbsItem;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -16,6 +17,7 @@ class TaskController extends Controller
 
         $tasks = ProjectTask::where('company_id', $company->id)
             ->where('project_id', $project->id)
+            ->with(['wbsItem:id,project_id,code,title'])
             ->orderBy('due_date')
             ->get();
 
@@ -31,6 +33,7 @@ class TaskController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'phase_id' => ['nullable', 'uuid'],
             'assigned_to' => ['nullable', 'uuid'],
+            'wbs_item_id' => ['nullable', 'uuid'],
             'due_date' => ['nullable', 'date'],
             'priority' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'string', 'max:50'],
@@ -42,6 +45,11 @@ class TaskController extends Controller
 
         $data['company_id'] = $company->id;
         $data['project_id'] = $project->id;
+
+        if (! empty($data['wbs_item_id'])) {
+            $wbs = WbsItem::where('company_id', $company->id)->findOrFail($data['wbs_item_id']);
+            abort_unless($wbs->project_id === $project->id, 403);
+        }
 
         $task = ProjectTask::create($data);
 
@@ -57,6 +65,7 @@ class TaskController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'phase_id' => ['nullable', 'uuid'],
             'assigned_to' => ['nullable', 'uuid'],
+            'wbs_item_id' => ['nullable', 'uuid'],
             'due_date' => ['nullable', 'date'],
             'priority' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'string', 'max:50'],
@@ -65,6 +74,11 @@ class TaskController extends Controller
             'longitude' => ['nullable', 'numeric'],
             'qr_code' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (! empty($data['wbs_item_id'])) {
+            $wbs = WbsItem::where('company_id', $company->id)->findOrFail($data['wbs_item_id']);
+            abort_unless($wbs->project_id === $task->project_id, 403);
+        }
 
         $task->update($data);
 

@@ -48,9 +48,9 @@ onMounted(loadTasks)
   <AppShell>
     <div class="space-y-6">
       <header class="border-b border-gray-200 pb-4 dark:border-white/10">
-        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Projects / My tasks</p>
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">My project tasks</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Update your assigned tasks across all projects.</p>
+        <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Projects / My WBS</p>
+        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">My assigned WBS items</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Review and update the WBS work packages you own.</p>
       </header>
 
       <div v-if="loading" class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 shadow-sm dark:border-white/10 dark:bg-gray-900 dark:text-gray-200">
@@ -69,22 +69,30 @@ onMounted(loadTasks)
               <tr>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">WBS item</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Project</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Due</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Dates</th>
                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Status</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Qty (done/total)</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Qty (done / total)</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white dark:divide-white/10 dark:bg-gray-900">
               <tr v-for="task in tasks" :key="task.id" class="hover:bg-gray-50 dark:hover:bg-white/5">
                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                  <div class="font-semibold">{{ task.name }}</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ task.phase?.name || '' }}</div>
+                    <div class="flex items-center gap-2">
+                      <span class="rounded-md bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-200">{{ task.code }}</span>
+                      <span class="font-semibold">{{ task.title }}</span>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{{ task.description || task.notes }}</div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   {{ task.project?.name || '—' }}
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                  {{ task.end_date || task.due_date || '—' }}
+                  <div class="text-xs text-gray-600 dark:text-gray-300">
+                    <span class="font-semibold">Start:</span> {{ task.start_date || '—' }}
+                  </div>
+                  <div class="text-xs text-gray-600 dark:text-gray-300">
+                    <span class="font-semibold">End:</span> {{ task.end_date || '—' }}
+                  </div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                   <select v-model="task.status" class="rounded-md border border-gray-200 px-2 py-1 text-xs dark:border-white/10 dark:bg-gray-900 dark:text-white" @change="saveTask(task)">
@@ -115,7 +123,7 @@ onMounted(loadTasks)
               </tr>
               <tr v-if="!tasks.length">
                 <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                  No tasks assigned to you yet.
+                  No WBS items assigned to you yet.
                 </td>
               </tr>
             </tbody>

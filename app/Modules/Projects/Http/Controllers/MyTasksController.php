@@ -19,7 +19,7 @@ class MyTasksController extends Controller
         $tasks = ProjectTask::query()
             ->where('company_id', $company->id)
             ->where('assigned_to', $user->id)
-            ->with(['project:id,name,code'])
+            ->with(['project:id,name,code', 'wbsItem:id,project_id,code,title'])
             ->orderBy('due_date')
             ->get();
 
