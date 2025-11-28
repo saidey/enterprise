@@ -66,4 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/roles', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'store']);
     Route::get('/admin/roles/{role}', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'show']);
     Route::put('/admin/roles/{role}', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'update']);
+    Route::get('/admin/companies', [CompanyController::class, 'all']);
+    Route::get('/admin/audit/logs', [AuditLogController::class, 'platformIndex']);
+    Route::get('/admin/audit/actions', [AuditLogController::class, 'platformActions']);
 });

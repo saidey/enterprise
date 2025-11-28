@@ -201,6 +201,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
     },
     {
+        path: '/administrator/audit-logs',
+        name: 'platform-audit-logs',
+        component: () => import('./views/PlatformAuditLogsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
         path: '/settings/company',
         name: 'settings-company',
         component: CompanySettingsView,

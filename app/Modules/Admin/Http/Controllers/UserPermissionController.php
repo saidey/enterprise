@@ -140,8 +140,22 @@ class UserPermissionController extends Controller
             ? Role::whereIn('id', $data['role_ids'])->get()
             : collect();
 
-        if (! $actorIsSuper && $roles->contains(fn ($r) => $r->role_scope === 'platform')) {
-            abort(403, 'Platform roles can only be assigned by superadmin.');
+        // Preserve existing platform roles when the actor is not superadmin
+        $existingPlatformRoles = $user->roles()->where('role_scope', 'platform')->get();
+        if (! $actorIsSuper) {
+            // Tenant admins cannot remove or assign platform roles
+            if ($roles->contains(fn ($r) => $r->role_scope === 'platform')) {
+                abort(403, 'Platform roles can only be assigned by superadmin.');
+            }
+            // If the target user already has platform roles, keep them
+            if ($existingPlatformRoles->isNotEmpty()) {
+                $roles = $roles->merge($existingPlatformRoles)->unique('id');
+            }
+        } else {
+            // Even superadmin: if updating within a company context, keep existing platform roles unless explicitly included
+            if (currentCompany()) {
+                $roles = $roles->merge($existingPlatformRoles)->unique('id');
+            }
         }
 
         $permissions = ! empty($data['permission_ids'] ?? [])

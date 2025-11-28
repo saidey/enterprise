@@ -503,6 +503,7 @@ const navigation = computed(() => {
   if (isPlatformContext.value) {
     return [
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
+      { name: 'Audit logs', to: '/administrator/audit-logs', icon: DocumentDuplicateIcon },
       { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
       { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },
     ]

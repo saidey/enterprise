@@ -50,6 +50,71 @@ class AuditLogController extends Controller
         ]);
     }
 
+    // Platform-level index (no tenant scoping, optional company filter)
+    public function platformIndex(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 401);
+        abort_unless($user->hasRole('superadmin') || $user->hasRole('platform_admin') || $user->can('users.manage_permissions'), 403);
+
+        $perPage = $request->get('per_page', 20);
+
+        $query = AuditLog::with('user');
+
+        if ($companyId = $request->get('company_id')) {
+            $query->where('company_id', $companyId);
+        }
+
+        if ($action = $request->get('action')) {
+            $query->where('action', $action);
+        }
+
+        if ($userId = $request->get('user_id')) {
+            $query->where('user_id', $userId);
+        }
+
+        if ($auditableType = $request->get('auditable_type')) {
+            $query->where('auditable_type', $auditableType);
+        }
+
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        $allowedSorts = ['created_at', 'user_id', 'action', 'auditable_type', 'company_id'];
+
+        if (! in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'created_at';
+        }
+
+        $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
+
+        $logs = $query
+            ->orderBy($sortBy, $sortDir)
+            ->paginate($perPage);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $logs,
+        ]);
+    }
+
+    public function platformActions()
+    {
+        $user = request()->user();
+        abort_unless($user, 401);
+        abort_unless($user->hasRole('superadmin') || $user->hasRole('platform_admin') || $user->can('users.manage_permissions'), 403);
+
+        $actions = AuditLog::query()
+            ->select('action')
+            ->distinct()
+            ->orderBy('action')
+            ->pluck('action');
+
+        return response()->json([
+            'data' => $actions,
+        ]);
+    }
+
     public function show(AuditLog $log)
     {
         $this->authorize('view', $log);

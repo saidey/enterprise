@@ -71,6 +71,20 @@ class CompanyController extends Controller
         ]);
     }
 
+    // Platform-level: list all companies
+    public function all(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user, 401);
+        abort_unless($user->hasRole('superadmin') || $user->hasRole('platform_admin') || $user->can('users.manage_permissions'), 403);
+
+        $companies = Company::select('id', 'name', 'slug', 'status', 'subscription_status')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json(['data' => $companies]);
+    }
+
     // PUT /api/companies/current
     public function updateCurrent(Request $request)
     {

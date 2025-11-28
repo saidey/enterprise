@@ -457,6 +457,22 @@ export function fetchProjectUsers() {
     return api.get('/api/v1/projects/users')
 }
 
+/* ============================================================================
+ * Platform admin
+ * ========================================================================== */
+
+export function fetchAllCompanies() {
+    return api.get('/api/admin/companies')
+}
+
+export function fetchPlatformAuditLogs(params = {}) {
+    return api.get('/api/admin/audit/logs', { params })
+}
+
+export function fetchPlatformAuditActions() {
+    return api.get('/api/admin/audit/actions')
+}
+
 export function fetchTaskAttachments(taskId) {
     return api.get(`/api/v1/projects/tasks/${taskId}/attachments`)
 }
