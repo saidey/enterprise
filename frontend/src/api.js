@@ -137,6 +137,19 @@ export function fetchAuditActions() {
     return api.get('/api/audit/logs/actions')
 }
 
+// Platform-level audit log APIs
+export function fetchPlatformAuditLogs(params = {}) {
+    return api.get('/api/admin/audit/logs', { params })
+}
+
+export function fetchPlatformAuditActions() {
+    return api.get('/api/admin/audit/actions')
+}
+
+export function fetchPlatformAuditLog(id) {
+    return api.get(`/api/admin/audit/logs/${id}`)
+}
+
 /* ============================================================================
  * Admin: permission & role management
  * ========================================================================== */
@@ -463,14 +476,6 @@ export function fetchProjectUsers() {
 
 export function fetchAllCompanies() {
     return api.get('/api/admin/companies')
-}
-
-export function fetchPlatformAuditLogs(params = {}) {
-    return api.get('/api/admin/audit/logs', { params })
-}
-
-export function fetchPlatformAuditActions() {
-    return api.get('/api/admin/audit/actions')
 }
 
 export function fetchTaskAttachments(taskId) {

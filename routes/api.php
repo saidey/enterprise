@@ -69,4 +69,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/companies', [CompanyController::class, 'all']);
     Route::get('/admin/audit/logs', [AuditLogController::class, 'platformIndex']);
     Route::get('/admin/audit/actions', [AuditLogController::class, 'platformActions']);
+    Route::get('/admin/audit/logs/{log}', [AuditLogController::class, 'platformShow']);
 });

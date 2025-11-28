@@ -7,6 +7,7 @@ use App\Modules\Company\Models\Operation;
 use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid; // if you're using ordered UUIDs
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
@@ -20,6 +21,8 @@ class AuditLog extends Model
 
     protected $fillable = [
         'user_id',
+        'company_id',
+        'operation_id',
         'action',
         'auditable_type',
         'auditable_id',
@@ -29,6 +32,10 @@ class AuditLog extends Model
         'user_agent',
         'url',
         'created_at',
+    ];
+
+    protected $appends = [
+        'created_at_human',
     ];
 
     protected $casts = [
@@ -55,5 +62,12 @@ class AuditLog extends Model
     public function operation()
     {
         return $this->belongsTo(Operation::class);
+    }
+
+    public function getCreatedAtHumanAttribute(): ?string
+    {
+        return $this->created_at
+            ? Carbon::parse($this->created_at)->timezone(config('app.timezone'))->toDayDateTimeString()
+            : null;
     }
 }

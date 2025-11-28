@@ -59,7 +59,8 @@ class AuditLogController extends Controller
 
         $perPage = $request->get('per_page', 20);
 
-        $query = AuditLog::with('user');
+        // Platform view must bypass tenant scoping so platform admins can see everything.
+        $query = AuditLog::withoutGlobalScopes()->with(['user', 'company:id,name']);
 
         if ($companyId = $request->get('company_id')) {
             $query->where('company_id', $companyId);
@@ -104,7 +105,7 @@ class AuditLogController extends Controller
         abort_unless($user, 401);
         abort_unless($user->hasRole('superadmin') || $user->hasRole('platform_admin') || $user->can('users.manage_permissions'), 403);
 
-        $actions = AuditLog::query()
+        $actions = AuditLog::withoutGlobalScopes()
             ->select('action')
             ->distinct()
             ->orderBy('action')
@@ -112,6 +113,25 @@ class AuditLogController extends Controller
 
         return response()->json([
             'data' => $actions,
+        ]);
+    }
+
+    public function platformShow(string $logId)
+    {
+        $user = request()->user();
+        abort_unless($user, 401);
+        abort_unless($user->hasRole('superadmin') || $user->hasRole('platform_admin') || $user->can('users.manage_permissions'), 403);
+
+        $log = AuditLog::withoutGlobalScopes()
+            ->with('user:id,name,email', 'company:id,name', 'auditable')
+            ->findOrFail($logId);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'log' => $log,
+                'model' => $log->auditable,
+            ],
         ]);
     }
 
