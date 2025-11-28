@@ -195,6 +195,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'admin' },
     },
     {
+        path: '/administrator',
+        name: 'platform-admin',
+        component: () => import('./views/AdministratorView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
         path: '/settings/company',
         name: 'settings-company',
         component: CompanySettingsView,
@@ -335,12 +341,24 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // ---- MODULE ACCESS CHECK ----
-    if (to.meta.app && to.meta.app !== 'admin') {
+    if (to.meta.app && to.meta.app !== 'admin' && to.meta.app !== 'platform') {
         const enabledCodes = new Set((session.modules.value || []).map((m) => m.code))
         const isHrApp = to.meta.app === 'hr'
         const allowHr = isHrApp && (enabledCodes.has('hr') || hasHrAccess())
         if (!enabledCodes.has(to.meta.app) && !allowHr) {
             console.warn(`Module ${to.meta.app} not enabled for this company`)
+            return next({ name: 'home' })
+        }
+    }
+
+    // Platform app access: only superadmin/platform_admin or manage_permissions
+    if (to.meta.app === 'platform') {
+        const roles = (session.user.value?.roles || []).map((r) => r.name)
+        const isPlatform =
+            roles.includes('superadmin') ||
+            roles.includes('platform_admin') ||
+            session.hasPermission('users.manage_permissions')
+        if (!isPlatform) {
             return next({ name: 'home' })
         }
     }

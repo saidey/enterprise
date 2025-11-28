@@ -5,9 +5,9 @@ namespace App\Providers;
 use App\Models\Audit\AuditLog;
 use App\Modules\HR\Models\Employee;
 use App\Modules\HR\Policies\EmployeePolicy;
-use App\Policies\AuditLogPolicy;
 use App\Modules\Projects\Models\WbsItem;
 use App\Modules\Projects\Policies\WbsPolicy;
+use App\Policies\AuditLogPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -37,7 +37,16 @@ class AuthServiceProvider extends ServiceProvider
             if ($user->hasRole('superadmin') || $user->hasRole('platform_admin')) {
                 return true;
             }
+
             return null;
+        });
+
+        Gate::define('viewPulse', function ($user = null) {
+            return $user && ($user->hasRole('superadmin') || $user->hasRole('platform_admin'));
+        });
+
+        Gate::define('viewHorizon', function ($user = null) {
+            return $user && ($user->hasRole('superadmin') || $user->hasRole('platform_admin'));
         });
     }
 }

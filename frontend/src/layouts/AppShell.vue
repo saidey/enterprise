@@ -254,6 +254,14 @@
             >
               Apps
             </button>
+            <button
+              v-if="isPlatformUser"
+              type="button"
+              class="hidden rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 shadow-sm hover:bg-indigo-100 md:inline-flex dark:border-indigo-500/30 dark:bg-indigo-500/20 dark:text-indigo-100 dark:hover:bg-indigo-500/30"
+              @click="goPlatformAdmin"
+            >
+              Platform admin
+            </button>
             <!-- Switch buttons -->
             <button
               type="button"
@@ -420,6 +428,18 @@ const hrWorkspaceAllowed = computed(() => {
   return keys.some((k) => hasPermission(k))
 })
 
+const isPlatformUser = computed(() => {
+  const platformRoles = (user.value?.roles || []).map((r) => r.name)
+  if (platformRoles.includes('superadmin') || platformRoles.includes('platform_admin')) {
+    return true
+  }
+  // Fallback: allow platform users whose permissions include manage_permissions (for payloads missing roles)
+  if (hasPermission('users.manage_permissions')) {
+    return true
+  }
+  return false
+})
+
 const companyName = computed(() => currentCompany.value?.name || '')
 const operationName = computed(() => currentOperation.value?.name || '')
 const userName = computed(() => user.value?.name || 'User')
@@ -428,6 +448,8 @@ const isAdminContext = computed(() => {
   if (currentApp.value === 'admin') return true
   return ['admin', 'settings', 'audit-logs'].some((segment) => route.path.startsWith(`/${segment}`))
 })
+
+const isPlatformContext = computed(() => currentApp.value === 'platform' || route.path.startsWith('/administrator'))
 
 const currentAppLabel = computed(() => {
   switch (currentApp.value) {
@@ -541,6 +563,14 @@ const navigation = computed(() => {
     return items
   }
 
+  if (app === 'platform' || isPlatformContext.value) {
+    return [
+      { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
+      { name: 'Horizon', to: '/horizon', icon: DocumentDuplicateIcon },
+      { name: 'Pulse', to: '/pulse', icon: DocumentDuplicateIcon },
+    ]
+  }
+
   if (app === 'projects') {
     const items = [
       { name: 'Apps dashboard', to: '/', icon: HomeIcon },
@@ -633,5 +663,10 @@ const goSelectOperation = () => {
 const goToAppsDashboard = () => {
   setCurrentApp(null)
   router.push({ name: 'home' })
+}
+
+const goPlatformAdmin = () => {
+  setCurrentApp('platform')
+  router.push('/administrator')
 }
 </script>
