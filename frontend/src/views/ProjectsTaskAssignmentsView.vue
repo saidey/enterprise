@@ -55,6 +55,11 @@ const statusOptions = [
 ]
 
 const selectedProject = computed(() => projects.value.find((p) => p.id === selectedProjectId.value) || null)
+const displayUser = (id) => {
+  const u = users.value.find((u) => u.id === id)
+  if (!u) return ''
+  return u.name ? `${u.name} (${u.email || ''})` : u.email || ''
+}
 
 async function loadProjects() {
   loading.value = true
@@ -421,7 +426,15 @@ onMounted(async () => {
                                 'relative cursor-default py-2 pr-9 pl-3 select-none',
                               ]"
                             >
-                              <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ u.name || u.email }}</span>
+                              <div class="flex items-center gap-3">
+                                <span class="flex size-7 items-center justify-center rounded-full bg-indigo-50 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-200">
+                                  {{ (u.name || u.email || '?').charAt(0).toUpperCase() }}
+                                </span>
+                                <div class="min-w-0">
+                                  <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ u.name || u.email }}</span>
+                                  <span class="block truncate text-xs text-gray-500 dark:text-gray-400">{{ u.email }}</span>
+                                </div>
+                              </div>
                               <span
                                 v-if="selected"
                                 :class="[
