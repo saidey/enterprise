@@ -17,8 +17,18 @@ class UserDirectoryController extends Controller
         abort_unless($company, 428, 'No company selected.');
 
         $users = User::query()
-            ->select('users.id', 'users.name', 'users.email')
+            ->select([
+                'users.id',
+                'users.name',
+                'users.email',
+                'employees.name as employee_name',
+                'employees.employee_id as employee_id',
+            ])
             ->join('company_user', 'company_user.user_id', '=', 'users.id')
+            ->leftJoin('employees', function ($join) use ($company) {
+                $join->on('employees.user_id', '=', 'users.id')
+                    ->where('employees.company_id', $company->id);
+            })
             ->where('company_user.company_id', $company->id)
             ->orderBy('users.name')
             ->get();

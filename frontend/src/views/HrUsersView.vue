@@ -117,24 +117,34 @@ onMounted(loadEmployees)
               <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ u.name || '—' }}</td>
               <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">{{ u.email || '—' }}</td>
               <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
-                <div class="flex items-center gap-2">
-                  <select
-                    v-model="attachSelections[u.id]"
-                    class="w-full rounded-md border border-gray-200 px-2 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
-                  >
-                    <option value="">Select employee</option>
-                    <option v-for="emp in employees" :key="emp.id" :value="emp.id">
-                      {{ emp.full_name || emp.name || '' }} ({{ emp.code || emp.employee_id || '' }})
-                    </option>
-                  </select>
-                  <button
-                    type="button"
-                    class="rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
-                    :disabled="!attachSelections[u.id]"
-                    @click="attachEmployee(u.id)"
-                  >
-                    Attach
-                  </button>
+                <div class="flex flex-col gap-2">
+                  <div v-if="u.employee_name || u.employee_id" class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ u.employee_name || 'Employee attached' }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      ID: {{ u.employee_id || '—' }}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <select
+                      v-model="attachSelections[u.id]"
+                      class="w-full rounded-md border border-gray-200 px-2 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
+                    >
+                      <option value="">Select employee</option>
+                      <option v-for="emp in employees" :key="emp.id" :value="emp.id">
+                        {{ emp.full_name || emp.name || '' }} ({{ emp.code || emp.employee_id || '' }})
+                      </option>
+                    </select>
+                    <button
+                      type="button"
+                      class="rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                      :disabled="!attachSelections[u.id]"
+                      @click="attachEmployee(u.id)"
+                    >
+                      Attach
+                    </button>
+                  </div>
                 </div>
               </td>
               <td class="px-4 py-3 text-right text-sm">
