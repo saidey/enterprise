@@ -134,6 +134,10 @@ export function fetchRenewalQuotes() {
     return api.get('/api/renewals/quotes')
 }
 
+export function fetchTenantBillingSettings() {
+    return api.get('/api/billing/settings')
+}
+
 /* ============================================================================
  * Profile
  * ========================================================================== */

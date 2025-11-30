@@ -243,6 +243,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
     },
     {
+        path: '/administrator/renewals',
+        name: 'platform-renewals',
+        component: () => import('./views/PlatformRenewalsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
         path: '/administrator/plans',
         name: 'platform-plans',
         component: () => import('./views/PlatformPlansView.vue'),

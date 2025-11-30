@@ -22,6 +22,14 @@ class BillingSettingsController extends Controller
         return response()->json(['data' => $settings]);
     }
 
+    // Read-only for tenants: expose GST/currency
+    public function tenantShow(Request $request)
+    {
+        $settings = BillingSetting::select('gst_percent', 'currency', 'invoice_prefix')->first();
+
+        return response()->json(['data' => $settings]);
+    }
+
     public function update(Request $request)
     {
         $this->authorizePlatform($request);

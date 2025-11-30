@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { submitRenewal, requestRenewalQuote, fetchPlans, fetchRenewalQuotes, createRenewalQuote } from '../api'
+import { submitRenewal, requestRenewalQuote, fetchPlans, fetchRenewalQuotes, createRenewalQuote, fetchTenantBillingSettings } from '../api'
 import { useSession } from '../composables/useSession'
 
 const slip = ref(null)
@@ -20,6 +20,7 @@ const loadingQuotes = ref(false)
 const selectedQuote = ref(null)
 const showQuoteModal = ref(false)
 
+const tenantBilling = ref({ gst_percent: null, currency: 'MVR' })
 const selectedPlanObj = computed(() => plans.value.find((p) => p.id === selectedPlan.value) || null)
 const subtotalDisplay = computed(() => {
   if (!selectedPlanObj.value) return null
@@ -29,13 +30,13 @@ const subtotalDisplay = computed(() => {
 const gstDisplay = computed(() => {
   if (!selectedPlanObj.value) return null
   const price = period.value === 'yearly' ? selectedPlanObj.value.price_yearly : selectedPlanObj.value.price_monthly
-  const gstPercent = selectedPlanObj.value.gst_percent ?? 0
+  const gstPercent = tenantBilling.value.gst_percent ?? 0
   return Number((price || 0) * (gstPercent / 100)).toFixed(2)
 })
 const totalDisplay = computed(() => {
   if (!selectedPlanObj.value) return null
   const price = period.value === 'yearly' ? selectedPlanObj.value.price_yearly : selectedPlanObj.value.price_monthly
-  const gstPercent = selectedPlanObj.value.gst_percent ?? 0
+  const gstPercent = tenantBilling.value.gst_percent ?? 0
   const gst = (price || 0) * (gstPercent / 100)
   return Number((price || 0) + gst).toFixed(2)
 })
@@ -65,6 +66,15 @@ const loadQuotes = async () => {
     // ignore
   } finally {
     loadingQuotes.value = false
+  }
+}
+
+const loadBillingSettings = async () => {
+  try {
+    const { data } = await fetchTenantBillingSettings()
+    tenantBilling.value = data.data || { gst_percent: null, currency: 'MVR' }
+  } catch (err) {
+    // ignore
   }
 }
 
@@ -133,6 +143,7 @@ const openQuoteFromList = (q) => {
 
 onMounted(loadPlans)
 onMounted(loadQuotes)
+onMounted(loadBillingSettings)
 </script>
 
 <template>
@@ -227,6 +238,24 @@ onMounted(loadQuotes)
                 <td class="px-3 py-2">{{ q.plan?.name }}</td>
                 <td class="px-3 py-2 text-right">{{ Number(q.total_amount).toFixed(2) }} {{ q.currency || 'MVR' }}</td>
                 <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ new Date(q.created_at).toLocaleDateString() }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    v-if="q.status === 'paid'"
+                    class="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-600/20 ring-inset dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/30"
+                  >Paid</span>
+                  <span
+                    v-else-if="q.status === 'quote'"
+                    class="rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-600/20 ring-inset dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30"
+                  >Pending payment</span>
+                  <span
+                    v-else-if="q.status === 'pending'"
+                    class="rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-600/20 ring-inset dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/30"
+                  >Submitted for verification</span>
+                  <span
+                    v-else
+                    class="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-300/80 ring-inset dark:bg-white/5 dark:text-gray-300 dark:ring-white/10"
+                  >{{ q.status }}</span>
+                </td>
                 <td class="px-3 py-2 text-right">
                   <button
                     type="button"

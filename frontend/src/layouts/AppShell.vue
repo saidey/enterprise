@@ -616,6 +616,7 @@ const navigation = computed(() => {
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
       { name: 'Companies', to: '/administrator/companies', icon: DocumentDuplicateIcon },
       { name: 'Subscriptions', to: '/administrator/subscriptions', icon: DocumentDuplicateIcon },
+      { name: 'Renewals', to: '/administrator/renewals', icon: DocumentDuplicateIcon },
       { name: 'Invoices', to: '/administrator/invoices', icon: DocumentDuplicateIcon },
       { name: 'Plans', to: '/administrator/plans', icon: DocumentDuplicateIcon },
       { name: 'Billing settings', to: '/administrator/billing-settings', icon: DocumentDuplicateIcon },

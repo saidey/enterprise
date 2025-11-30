@@ -46,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/renewals', [\App\Http\Controllers\RenewalController::class, 'store']);
         Route::get('/renewals/quotes', [\App\Http\Controllers\RenewalController::class, 'quotes']);
 
+        // Billing settings (read-only for tenant to compute GST)
+        Route::get('/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'tenantShow']);
+
         // Active plans (read-only)
         Route::get('/plans', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'listActive']);
     });
@@ -93,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'show']);
     Route::put('/admin/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'update']);
     Route::get('/admin/companies/{company}/operations', [\App\Modules\Company\Http\Controllers\Admin\CompanyOperationsAdminController::class, 'index']);
+    Route::get('/admin/renewals', [\App\Modules\Company\Http\Controllers\Admin\RenewalAdminController::class, 'index']);
+    Route::post('/admin/renewals/{submission}/approve', [\App\Modules\Company\Http\Controllers\Admin\RenewalAdminController::class, 'approve']);
     Route::get('/admin/audit/logs', [AuditLogController::class, 'platformIndex']);
     Route::get('/admin/audit/actions', [AuditLogController::class, 'platformActions']);
     Route::get('/admin/audit/logs/{log}', [AuditLogController::class, 'platformShow']);
