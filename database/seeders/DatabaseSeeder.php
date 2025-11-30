@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             ModulesAndPlansSeeder::class,
+            MaldivesIslandsSeeder::class,
+
         ]);
     }
 }

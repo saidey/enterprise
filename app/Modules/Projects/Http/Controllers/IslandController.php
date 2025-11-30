@@ -11,7 +11,28 @@ class IslandController extends Controller
     public function index(Request $request)
     {
         $company = currentCompany();
-        $islands = Island::where('company_id', $company->id)->orderBy('name')->get();
+
+        $islands = Island::withoutGlobalScopes()
+            ->where(function ($q) use ($company) {
+                $q->whereNull('company_id'); // global locations
+                if ($company) {
+                    $q->orWhere('company_id', $company->id); // tenant locations
+                }
+            })
+            ->orderBy('name')
+            ->get();
+
+        // If tenant has no locations yet, seed Maldives defaults for this tenant
+        if ($company && $islands->where('company_id', $company->id)->isEmpty()) {
+            Island::seedDefaultForCompany($company->id);
+            $islands = Island::withoutGlobalScopes()
+                ->where(function ($q) use ($company) {
+                    $q->whereNull('company_id');
+                    $q->orWhere('company_id', $company->id);
+                })
+                ->orderBy('name')
+                ->get();
+        }
 
         return response()->json(['data' => $islands]);
     }
@@ -20,6 +41,10 @@ class IslandController extends Controller
     {
         $company = currentCompany();
         $data = $request->validate([
+            'location_type' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'max:150'],
+            'region' => ['nullable', 'string', 'max:150'],
+            'city' => ['nullable', 'string', 'max:150'],
             'name' => ['required', 'string', 'max:255'],
             'atoll' => ['nullable', 'string', 'max:255'],
             'manager_id' => ['nullable', 'uuid'],
@@ -39,6 +64,10 @@ class IslandController extends Controller
         abort_unless($island->company_id === $company->id, 403);
 
         $data = $request->validate([
+            'location_type' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'max:150'],
+            'region' => ['nullable', 'string', 'max:150'],
+            'city' => ['nullable', 'string', 'max:150'],
             'name' => ['sometimes', 'string', 'max:255'],
             'atoll' => ['nullable', 'string', 'max:255'],
             'manager_id' => ['nullable', 'uuid'],

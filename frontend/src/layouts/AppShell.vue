@@ -607,7 +607,7 @@ const navigation = computed(() => {
           { name: 'Task assignments', to: '/apps/projects/tasks' },
           { name: 'Approvals', to: '/apps/projects/approvals' },
           { name: 'WBS', to: '/apps/projects/wbs' },
-          { name: 'Islands', to: '/apps/projects/islands' },
+          { name: 'Locations', to: '/apps/projects/islands' },
           { name: 'Reports', to: '/apps/projects/reports' },
         ],
       },

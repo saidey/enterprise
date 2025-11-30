@@ -150,8 +150,10 @@ onMounted(async () => {
               class="rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
               @change="loadProjects"
             >
-              <option value="">All islands</option>
-              <option v-for="i in islands" :key="i.id" :value="i.id">{{ i.name }}</option>
+              <option value="">All locations</option>
+              <option v-for="i in islands" :key="i.id" :value="i.id">
+                {{ i.name }} <span v-if="i.country">({{ i.country }})</span>
+              </option>
             </select>
             <button
               type="button"
@@ -206,10 +208,14 @@ onMounted(async () => {
             <input v-model="form.code" type="text" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
           </div>
           <div>
-            <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Island</label>
+            <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Location</label>
             <select v-model="form.island_id" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white">
-              <option value="">Select island</option>
-              <option v-for="i in islands" :key="i.id" :value="i.id">{{ i.name }}</option>
+              <option value="">Select location</option>
+              <option v-for="i in islands" :key="i.id" :value="i.id">
+                {{ i.name }}
+                <span v-if="i.country">({{ i.country }})</span>
+                <span v-if="i.region" class="text-gray-500 dark:text-gray-400"> — {{ i.region }}</span>
+              </option>
             </select>
           </div>
           <div>
