@@ -201,6 +201,24 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
     },
     {
+        path: '/administrator/companies',
+        name: 'platform-companies',
+        component: () => import('./views/PlatformCompaniesView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
+        path: '/administrator/subscriptions',
+        name: 'platform-subscriptions',
+        component: () => import('./views/PlatformSubscriptionsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
+        path: '/administrator/plans',
+        name: 'platform-plans',
+        component: () => import('./views/PlatformPlansView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
         path: '/administrator/audit-logs',
         name: 'platform-audit-logs',
         component: () => import('./views/PlatformAuditLogsView.vue'),

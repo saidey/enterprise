@@ -503,6 +503,9 @@ const navigation = computed(() => {
   if (isPlatformContext.value) {
     return [
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
+      { name: 'Companies', to: '/administrator/companies', icon: DocumentDuplicateIcon },
+      { name: 'Subscriptions', to: '/administrator/subscriptions', icon: DocumentDuplicateIcon },
+      { name: 'Plans', to: '/administrator/plans', icon: DocumentDuplicateIcon },
       { name: 'Audit logs', to: '/administrator/audit-logs', icon: DocumentDuplicateIcon },
       { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
       { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },
@@ -589,8 +592,12 @@ const navigation = computed(() => {
   if (app === 'platform' || isPlatformContext.value) {
     return [
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
-      { name: 'Horizon', to: '/horizon', icon: DocumentDuplicateIcon },
-      { name: 'Pulse', to: '/pulse', icon: DocumentDuplicateIcon },
+      { name: 'Companies', to: '/administrator/companies', icon: DocumentDuplicateIcon },
+      { name: 'Subscriptions', to: '/administrator/subscriptions', icon: DocumentDuplicateIcon },
+      { name: 'Plans', to: '/administrator/plans', icon: DocumentDuplicateIcon },
+      { name: 'Audit logs', to: '/administrator/audit-logs', icon: DocumentDuplicateIcon },
+      { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
+      { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },
     ]
   }
 

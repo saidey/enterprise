@@ -67,6 +67,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/roles/{role}', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'show']);
     Route::put('/admin/roles/{role}', [\App\Modules\Admin\Http\Controllers\RoleManagementController::class, 'update']);
     Route::get('/admin/companies', [CompanyController::class, 'all']);
+    Route::get('/admin/subscriptions', [\App\Modules\Company\Http\Controllers\Admin\SubscriptionAdminController::class, 'index']);
+    Route::put('/admin/subscriptions/{company}', [\App\Modules\Company\Http\Controllers\Admin\SubscriptionAdminController::class, 'update']);
+    Route::get('/admin/plans', [\App\Modules\Company\Http\Controllers\Admin\SubscriptionAdminController::class, 'plans']);
+    Route::post('/admin/plans', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'store']);
+    Route::put('/admin/plans/{plan}', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'update']);
+    Route::delete('/admin/plans/{plan}', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'destroy']);
     Route::get('/admin/audit/logs', [AuditLogController::class, 'platformIndex']);
     Route::get('/admin/audit/actions', [AuditLogController::class, 'platformActions']);
     Route::get('/admin/audit/logs/{log}', [AuditLogController::class, 'platformShow']);

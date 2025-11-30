@@ -478,6 +478,18 @@ export function fetchAllCompanies() {
     return api.get('/api/admin/companies')
 }
 
+export function fetchAdminSubscriptions() {
+    return api.get('/api/admin/subscriptions')
+}
+
+export function updateAdminSubscription(companyId, payload) {
+    return api.put(`/api/admin/subscriptions/${companyId}`, payload)
+}
+
+export function fetchAdminPlans() {
+    return api.get('/api/admin/plans')
+}
+
 export function fetchTaskAttachments(taskId) {
     return api.get(`/api/v1/projects/tasks/${taskId}/attachments`)
 }
