@@ -11,6 +11,10 @@ const busyId = ref(null)
 const tab = ref('quotes') // quotes | invoices
 const apiBase = api?.defaults?.baseURL || ''
 const renewals = ref([])
+const showVerifyModal = ref(false)
+const selectedInvoice = ref(null)
+const attachmentUrl = ref(null)
+const attachmentLoading = ref(false)
 
 const quotes = computed(() => invoices.value.filter((i) => i.status === 'quote'))
 const paidInvoices = computed(() => invoices.value.filter((i) => i.status !== 'quote'))
@@ -59,10 +63,47 @@ const approveQuote = async (invoice) => {
     await api.post(`/api/admin/invoices/${invoice.id}/approve`)
     success.value = 'Quote verified.'
     await loadInvoices()
+    showVerifyModal.value = false
+    selectedInvoice.value = null
   } catch (err) {
     error.value = err.response?.data?.message || 'Unable to verify quote.'
   } finally {
     busyId.value = null
+  }
+}
+
+const startVerify = (invoice) => {
+  selectedInvoice.value = invoice
+  showVerifyModal.value = true
+  loadAttachment(invoice)
+}
+
+const confirmVerify = () => {
+  if (!selectedInvoice.value) return
+  approveQuote(selectedInvoice.value)
+}
+
+const clearAttachment = () => {
+  if (attachmentUrl.value) {
+    URL.revokeObjectURL(attachmentUrl.value)
+  }
+  attachmentUrl.value = null
+}
+
+const loadAttachment = async (invoice) => {
+  clearAttachment()
+  const subs = getSubmissions(invoice)
+  const sub = subs[0]
+  if (!sub) return
+  attachmentLoading.value = true
+  try {
+    const res = await api.get(`/api/admin/renewals/${sub.id}/file`, { responseType: 'blob' })
+    const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/octet-stream' })
+    attachmentUrl.value = URL.createObjectURL(blob)
+  } catch (err) {
+    // ignore, will just not show preview
+  } finally {
+    attachmentLoading.value = false
   }
 }
 
@@ -168,9 +209,9 @@ onMounted(loadRenewals)
                       type="button"
                       class="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                       :disabled="busyId === inv.id"
-                      @click="approveQuote(inv)"
+                      @click="startVerify(inv)"
                     >
-                      {{ busyId === inv.id ? 'Verifying…' : 'Verify' }}
+                      Verify
                     </button>
                   </div>
                 </td>
@@ -182,6 +223,67 @@ onMounted(loadRenewals)
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verify modal -->
+    <div
+      v-if="showVerifyModal && selectedInvoice"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+      @click.self="showVerifyModal = false"
+    >
+      <div class="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-gray-900">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Verify payment</p>
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ selectedInvoice.number }}</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Total: {{ Number(selectedInvoice.total_amount).toFixed(2) }} {{ selectedInvoice.currency || 'MVR' }}</p>
+          </div>
+          <button
+            type="button"
+            class="rounded-md px-3 py-1 text-sm font-semibold text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50 dark:text-gray-300 dark:ring-white/10 dark:hover:bg-white/5"
+            @click="() => { showVerifyModal = false; clearAttachment(); selectedInvoice = null; }"
+          >
+            Close
+          </button>
+        </div>
+
+        <div class="mt-4 space-y-2">
+          <p class="text-sm text-gray-700 dark:text-gray-300">Attachment</p>
+          <div v-if="attachmentLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading attachment…</div>
+          <div v-else-if="attachmentUrl" class="space-y-2">
+            <div class="rounded-md border border-gray-200 bg-gray-50 p-2 dark:border-white/10 dark:bg-gray-800/40">
+              <iframe :src="attachmentUrl" class="h-80 w-full rounded" title="Attachment preview"></iframe>
+            </div>
+            <div class="flex items-center gap-3">
+              <a
+                :href="attachmentUrl"
+                target="_blank"
+                rel="noopener"
+                class="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-300 dark:hover:text-indigo-200"
+              >Open in new tab</a>
+            </div>
+          </div>
+          <p v-else class="text-xs text-gray-500 dark:text-gray-400">No attachment available.</p>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3">
+          <button
+            type="button"
+            class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            :disabled="busyId === selectedInvoice.id"
+            @click="confirmVerify"
+          >
+            {{ busyId === selectedInvoice.id ? 'Verifying…' : 'Confirm verification' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-700 ring-1 ring-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-white/10 dark:hover:bg-white/5"
+            @click="showVerifyModal = false"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
