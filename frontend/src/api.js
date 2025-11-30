@@ -564,6 +564,10 @@ export function fetchHrUsers() {
     return api.get('/api/v1/hr/users')
 }
 
+export function addHrUser({ email }) {
+    return api.post('/api/v1/hr/users', { email })
+}
+
 export function attachEmployeeToUser(userId, employeeId) {
     return api.post(`/api/v1/hr/users/${userId}/attach-employee`, { employee_id: employeeId })
 }

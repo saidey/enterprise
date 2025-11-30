@@ -58,6 +58,39 @@ class UserDirectoryController extends Controller
         ]);
     }
 
+    /**
+     * Attach an existing user to this company (without attaching an employee).
+     */
+    public function store(Request $request)
+    {
+        $this->authorize('hr.manage_employees');
+        $company = currentCompany();
+        abort_unless($company, 428, 'No company selected.');
+
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $data['email'])->firstOrFail();
+
+        if ($company->users()->where('users.id', $user->id)->exists()) {
+            return response()->json(['message' => 'User is already in this company.'], 200);
+        }
+
+        $company->users()->syncWithoutDetaching([
+            $user->id => [
+                'role' => 'member',
+                'is_owner' => false,
+                'is_default' => false,
+            ],
+        ]);
+
+        return response()->json([
+            'message' => 'User added to company.',
+            'data' => $user->only(['id', 'name', 'email']),
+        ], 201);
+    }
+
     public function destroy(Request $request, User $user)
     {
         $this->authorize('hr.manage_employees');

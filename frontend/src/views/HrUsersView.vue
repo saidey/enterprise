@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { fetchHrUsers, fetchEmployees, attachEmployeeToUser, removeHrUser } from '../api'
+import { fetchHrUsers, fetchEmployees, attachEmployeeToUser, removeHrUser, addHrUser } from '../api'
 
 const users = ref([])
 const loading = ref(false)
@@ -10,6 +10,9 @@ const search = ref('')
 const employees = ref([])
 const attachSelections = ref({})
 const removeBusy = ref({})
+const addEmail = ref('')
+const addBusy = ref(false)
+const addMessage = ref('')
 
 const filtered = computed(() => {
   const q = search.value.toLowerCase()
@@ -74,6 +77,22 @@ async function removeUser(userId) {
   }
 }
 
+async function addUser() {
+  addBusy.value = true
+  addMessage.value = ''
+  error.value = ''
+  try {
+    await addHrUser({ email: addEmail.value })
+    addMessage.value = 'User added.'
+    addEmail.value = ''
+    await loadUsers()
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to add user.'
+  } finally {
+    addBusy.value = false
+  }
+}
+
 onMounted(loadUsers)
 onMounted(loadEmployees)
 </script>
@@ -94,6 +113,29 @@ onMounted(loadEmployees)
           placeholder="Search by name or email"
           class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white"
         />
+      </div>
+
+      <div class="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
+        <div class="text-sm font-semibold text-gray-900 dark:text-white">Add user by email</div>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            v-model="addEmail"
+            type="email"
+            placeholder="user@example.com"
+            class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white sm:w-80"
+          />
+          <button
+            type="button"
+            class="rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            :disabled="addBusy || !addEmail"
+            @click="addUser"
+          >
+            {{ addBusy ? 'Adding…' : 'Add user' }}
+          </button>
+          <span v-if="addMessage" class="text-xs text-emerald-600 dark:text-emerald-300">{{ addMessage }}</span>
+          <span v-if="error && !loading" class="text-xs text-red-600 dark:text-red-300">{{ error }}</span>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Adds an existing user to this company. Employee attachment is optional.</p>
       </div>
 
       <div v-if="loading" class="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700 shadow-sm dark:border-white/10 dark:bg-gray-900 dark:text-gray-200">

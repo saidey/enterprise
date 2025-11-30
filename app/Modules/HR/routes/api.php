@@ -54,6 +54,7 @@ Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
 
         // Users (non-employee directory)
         Route::get('/users', [UserDirectoryController::class, 'index']);
+        Route::post('/users', [UserDirectoryController::class, 'store']);
         Route::post('/users/{user}/attach-employee', [UserDirectoryController::class, 'attachEmployee']);
         Route::delete('/users/{user}', [UserDirectoryController::class, 'destroy']);
     });
