@@ -16,7 +16,8 @@ class AccountingSettingsController extends Controller
         $settings = AccountingSetting::firstOrCreate(
             ['company_id' => $company->id],
             [
-                'currency' => 'USD',
+                'currency' => 'MVR',
+                'gst_percent' => 8,
                 'fiscal_year_start' => '01-01',
                 'decimal_places' => 2,
             ]
@@ -32,6 +33,7 @@ class AccountingSettingsController extends Controller
 
         $data = $request->validate([
             'currency' => ['required', 'string', 'max:10'],
+            'gst_percent' => ['required', 'numeric'],
             'fiscal_year_start' => ['required', 'string', 'max:5'],
             'decimal_places' => ['required', 'integer', 'min:0', 'max:4'],
         ]);

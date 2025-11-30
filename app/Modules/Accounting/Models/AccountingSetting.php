@@ -14,6 +14,7 @@ class AccountingSetting extends Model
     protected $fillable = [
         'company_id',
         'currency',
+        'gst_percent',
         'fiscal_year_start',
         'decimal_places',
     ];

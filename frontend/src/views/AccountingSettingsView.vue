@@ -5,6 +5,7 @@ import { fetchAccountingSettings, updateAccountingSettings } from '../api'
 
 const settings = ref({
   currency: 'USD',
+  gst_percent: 0,
   fiscal_year_start: '01-01',
   decimal_places: 2,
 })
@@ -53,6 +54,10 @@ onMounted(loadSettings)
           <div>
             <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Currency</label>
             <input v-model="settings.currency" type="text" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
+          </div>
+          <div>
+            <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">GST %</label>
+            <input v-model.number="settings.gst_percent" type="number" step="0.01" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
           </div>
           <div>
             <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Fiscal year start (MM-DD)</label>
