@@ -29,20 +29,35 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
     // Operations
-    Route::middleware('company.selected')->group(function () {
-        // Company settings
-        Route::get('/companies/current', [CompanyController::class, 'current']);
-        Route::put('/companies/current', [CompanyController::class, 'updateCurrent']);
-
-        Route::get('/operations/my', [OperationController::class, 'my']);
-        Route::post('/operations', [OperationController::class, 'store']);
+    // Company-scoped, no subscription check (used by shell/renewals)
+    Route::middleware(['company.selected'])->group(function () {
+        // Modules enabled for company
+        Route::get('/modules/enabled', [ModuleController::class, 'enabled']);
 
         // Operation session
         Route::post('/session/operation/{operation}', [SessionOperationController::class, 'set']);
         Route::get('/session/operation', [SessionOperationController::class, 'show']);
 
-        // Modules enabled for company
-        Route::get('/modules/enabled', [ModuleController::class, 'enabled']);
+        // Operations list
+        Route::get('/operations/my', [OperationController::class, 'my']);
+
+        // Renewal quote + submission (allowed even if subscription inactive)
+        Route::post('/renewals/quote', [\App\Http\Controllers\RenewalController::class, 'quote']);
+        Route::post('/renewals', [\App\Http\Controllers\RenewalController::class, 'store']);
+        Route::get('/renewals/quotes', [\App\Http\Controllers\RenewalController::class, 'quotes']);
+
+        // Active plans (read-only)
+        Route::get('/plans', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'listActive']);
+    });
+
+    // Company-scoped with active subscription
+    Route::middleware(['company.selected', 'subscription.active'])->group(function () {
+        // Company settings
+        Route::get('/companies/current', [CompanyController::class, 'current']);
+        Route::put('/companies/current', [CompanyController::class, 'updateCurrent']);
+
+        // Operations create
+        Route::post('/operations', [OperationController::class, 'store']);
 
         // Audit logs (scoped to current company)
         Route::get('/audit/logs', [AuditLogController::class, 'index']);

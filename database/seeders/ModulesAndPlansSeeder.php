@@ -28,27 +28,15 @@ class ModulesAndPlansSeeder extends Seeder
         }
 
         Plan::firstOrCreate(
-            ['code' => 'starter'],
+            ['code' => 'standard'],
             [
                 'id' => (string) Str::orderedUuid(),
-                'name' => 'Starter',
-                'price_monthly' => 0,
-                'price_yearly' => 0,
-                'included_modules' => ['hr'],
-                'description' => 'Starter plan with HR module.',
-                'is_active' => true,
-            ]
-        );
-
-        Plan::firstOrCreate(
-            ['code' => 'pro'],
-            [
-                'id' => (string) Str::orderedUuid(),
-                'name' => 'Pro',
-                'price_monthly' => 0,
-                'price_yearly' => 0,
-                'included_modules' => ['hr', 'accounting'],
-                'description' => 'Pro plan with HR and Accounting modules.',
+                'name' => 'Standard',
+                'price_monthly' => 250,
+                'price_yearly' => 2700,
+                'trial_days' => 30,
+                'included_modules' => ['hr', 'projects', 'accounting', 'admin'],
+                'description' => 'Standard plan with core modules.',
                 'is_active' => true,
             ]
         );

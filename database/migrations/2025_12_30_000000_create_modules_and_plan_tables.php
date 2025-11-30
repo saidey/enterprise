@@ -48,6 +48,7 @@ return new class extends Migration
             $table->json('included_modules')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->unsignedInteger('trial_days')->default(0);
             $table->timestamps();
         });
 

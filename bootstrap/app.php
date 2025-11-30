@@ -3,6 +3,7 @@
 use App\Http\Middleware\AppendCompanyToJson;
 use App\Http\Middleware\EnsureCompanySelected;
 use App\Http\Middleware\EnsureOperationSelected;
+use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\EnsureModuleEnabled;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'company.selected' => EnsureCompanySelected::class,
             'operation.selected' => EnsureOperationSelected::class,
             'module' => EnsureModuleEnabled::class,
+            'subscription.active' => EnsureSubscriptionActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -28,6 +28,7 @@ class PlanAdminController extends Controller
             'included_modules' => ['nullable', 'array'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
+            'trial_days' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $plan = Plan::create($data);
@@ -49,6 +50,7 @@ class PlanAdminController extends Controller
             'included_modules' => ['nullable', 'array'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
+            'trial_days' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $plan->fill($data);
@@ -63,5 +65,17 @@ class PlanAdminController extends Controller
         $plan->delete();
 
         return response()->json(['message' => 'Plan deleted.']);
+    }
+
+    // Tenant-facing list (read-only)
+    public function listActive(Request $request)
+    {
+        // Company context already enforced by route middleware; no subscription requirement
+        $plans = Plan::query()
+            ->where('is_active', true)
+            ->orderBy('price_monthly')
+            ->get();
+
+        return response()->json(['data' => $plans]);
     }
 }

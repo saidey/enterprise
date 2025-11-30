@@ -135,6 +135,18 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'accounting' },
     },
     {
+        path: '/renew-subscription',
+        name: 'renew-subscription',
+        component: () => import('./views/RenewSubscriptionView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: false, app: 'admin' },
+    },
+    {
+        path: '/renew-subscription/quote',
+        name: 'renew-subscription-quote',
+        component: () => import('./views/SubscriptionQuoteView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: false, app: 'admin' },
+    },
+    {
         path: '/apps/projects',
         name: 'app-projects',
         component: () => import('./views/AppProjectsView.vue'),
@@ -296,6 +308,16 @@ const hasHrAccess = () => {
         'hr.manage_leave',
     ]
     return keys.some((k) => session.hasPermission(k))
+}
+
+const isPlatformUser = () => {
+    const roles = (session.user.value?.roles || []).map((r) => r.name)
+    // Allow platform-level roles or elevated permission flag
+    return (
+        roles.includes('superadmin') ||
+        roles.includes('platform_admin') ||
+        session.hasPermission('users.manage_permissions')
+    )
 }
 
 export const resetCachedUser = () => {

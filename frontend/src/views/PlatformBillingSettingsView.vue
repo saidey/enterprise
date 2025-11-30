@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
 import { fetchBillingSettings, updateBillingSettings, fetchAllCompanies, fetchAdminOperationsByCompany } from '../api'
 
-const settings = ref({ gst_percent: 0, invoice_prefix: 'INV' })
+const settings = ref({ gst_percent: 0, invoice_prefix: 'INV', currency: 'MVR' })
 const loading = ref(false)
 const error = ref('')
 const success = ref('')
@@ -76,6 +76,10 @@ onMounted(async () => {
           <div>
             <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">GST %</label>
             <input v-model.number="settings.gst_percent" type="number" step="0.01" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
+          </div>
+          <div>
+            <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Currency</label>
+            <input v-model="settings.currency" type="text" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm uppercase dark:border-white/10 dark:bg-gray-900 dark:text-white" />
           </div>
           <div>
             <label class="text-sm font-semibold text-gray-800 dark:text-gray-200">Invoice prefix</label>

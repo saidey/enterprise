@@ -20,6 +20,7 @@ const emptyPlan = () => ({
   included_modules: [],
   description: '',
   is_active: true,
+  trial_days: 0,
 })
 
 const form = ref(emptyPlan())
@@ -224,6 +225,10 @@ onMounted(loadPlans)
               <div>
                 <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Max operations</label>
                 <input v-model.number="form.max_operations" type="number" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Trial days (initial only)</label>
+                <input v-model.number="form.trial_days" type="number" min="0" class="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-white/10 dark:bg-gray-900 dark:text-white" />
               </div>
               <div class="md:col-span-2">
                 <label class="text-xs font-semibold text-gray-700 dark:text-gray-300">Description</label>

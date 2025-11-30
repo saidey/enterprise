@@ -9,6 +9,7 @@ class BillingSetting extends Model
     protected $fillable = [
         'gst_percent',
         'invoice_prefix',
+        'currency',
         'seller_company_id',
         'seller_operation_id',
     ];

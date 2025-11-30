@@ -57,6 +57,21 @@ api.interceptors.request.use(async (config) => {
     return config
 })
 
+// Global response interceptor: redirect to renew page if subscription inactive
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error.response?.status
+        const code = error.response?.data?.code
+        if (status === 402 && code === 'subscription_inactive') {
+            if (typeof window !== 'undefined' && window.location.pathname !== '/renew-subscription') {
+                window.location.assign('/renew-subscription')
+            }
+        }
+        return Promise.reject(error)
+    }
+)
+
 /* ============================================================================
  * Auth & session
  * ========================================================================== */
@@ -91,6 +106,32 @@ export async function registerRequest({ name, email, password, password_confirma
         password,
         password_confirmation,
     })
+}
+
+// Renewal quote (tenant scope)
+export function requestRenewalQuote({ planId, period }) {
+    const form = new FormData()
+    form.append('plan_id', planId)
+    form.append('period', period)
+    return api.post('/api/renewals/quote', form, { responseType: 'blob' })
+}
+
+// Tenant-facing plans list (active only)
+export function fetchPlans() {
+    return api.get('/api/plans')
+}
+
+// Renewal quote JSON (preview)
+export function createRenewalQuote({ planId, period }) {
+    return api.post(
+        '/api/renewals/quote',
+        { plan_id: planId, period },
+        { headers: { Accept: 'application/json' } }
+    )
+}
+
+export function fetchRenewalQuotes() {
+    return api.get('/api/renewals/quotes')
 }
 
 /* ============================================================================
@@ -546,6 +587,18 @@ export function updateAccountingSettings(payload) {
     return api.put('/api/v1/accounting/settings', payload)
 }
 
+/* ============================================================================
+ * Renewal
+ * ========================================================================== */
+
+export function submitRenewal({ slip, notes }) {
+    const form = new FormData()
+    form.append('slip', slip)
+    if (notes) form.append('notes', notes)
+    return api.post('/api/renewals', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    })
+}
 /* ============================================================================
  * Operations & session
  * ========================================================================== */

@@ -4,6 +4,9 @@ namespace App\Modules\Company\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Company\Models\Company;
+use App\Modules\Company\Models\CompanySubscription;
+use App\Models\Plan;
+use Spatie\Permission\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -49,6 +52,37 @@ class CompanyController extends Controller
                 'is_default' => true,
             ],
         ]);
+
+        // Grant creator all web guard permissions except platform-only (prefixed with platform.)
+        $allCompanyPermissions = Permission::query()
+            ->where('guard_name', 'web')
+            ->where('name', 'not like', 'platform.%')
+            ->pluck('name')
+            ->all();
+        if (! empty($allCompanyPermissions)) {
+            $user->givePermissionTo($allCompanyPermissions);
+        }
+
+        // Auto-assign standard plan subscription with trial
+        if ($plan = Plan::where('code', 'standard')->first()) {
+            $trialDays = (int) ($plan->trial_days ?? 0);
+            $today = now()->startOfDay();
+            $periodEnd = $trialDays > 0 ? $today->copy()->addDays($trialDays) : $today->copy()->addMonth();
+
+            CompanySubscription::create([
+                'company_id' => $company->id,
+                'plan_id' => $plan->id,
+                'status' => $trialDays > 0 ? 'trialing' : 'active',
+                'billing_cycle' => 'monthly',
+                'trial_ends_at' => $trialDays > 0 ? $periodEnd : null,
+                'current_period_start' => $today,
+                'current_period_end' => $periodEnd,
+                'next_billing_at' => $periodEnd,
+            ]);
+
+            $company->subscription_status = $trialDays > 0 ? 'trialing' : 'active';
+            $company->save();
+        }
 
         session(['current_company_id' => $company->id]);
 

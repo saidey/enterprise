@@ -29,6 +29,7 @@ class BillingSettingsController extends Controller
         $data = $request->validate([
             'gst_percent' => ['required', 'numeric'],
             'invoice_prefix' => ['required', 'string', 'max:50'],
+            'currency' => ['required', 'string', 'max:10'],
             'seller_company_id' => ['nullable', 'uuid'],
             'seller_operation_id' => ['nullable', 'uuid'],
         ]);

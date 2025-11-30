@@ -23,6 +23,7 @@ class Plan extends Model
         'included_modules',
         'description',
         'is_active',
+        'trial_days',
     ];
 
     protected $casts = [

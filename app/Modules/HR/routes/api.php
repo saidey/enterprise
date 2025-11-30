@@ -14,7 +14,7 @@ use App\Modules\HR\Http\Controllers\EmployeeInvitationController;
 use App\Modules\HR\Http\Controllers\UserDirectoryController;
 
 // Include the 'api' middleware group so Sanctum's SPA middleware (stateful + CSRF) runs
-Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:hr'])
+Route::middleware(['api', 'auth:sanctum', 'company.selected', 'subscription.active', 'module:hr'])
     ->prefix('/api/v1/hr')
     ->group(function () {
         Route::get('/departments/tree', [DepartmentController::class, 'tree']);

@@ -36,6 +36,13 @@ const handleSelect = async (company) => {
     // ⭐ MUST RESET user before navigating so router guard re-fetches /user
     resetCachedUser()
 
+    const subStatus = company.subscription_status || ''
+    const isActive = ['active', 'trialing'].includes(subStatus)
+    if (!isActive) {
+      router.push({ name: 'renew-subscription' })
+      return
+    }
+
     const redirect = route.query.redirect || '/'
     router.push(redirect)
   } catch (e) {

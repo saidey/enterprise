@@ -14,7 +14,7 @@ use App\Modules\Projects\Http\Controllers\TaskAttachmentController;
 use App\Modules\Projects\Http\Controllers\TaskCommentController;
 use App\Modules\Projects\Http\Controllers\ProjectUserController;
 
-Route::middleware(['api', 'auth:sanctum', 'company.selected', 'module:projects'])
+Route::middleware(['api', 'auth:sanctum', 'company.selected', 'subscription.active', 'module:projects'])
     ->prefix('/api/v1/projects')
     ->group(function () {
         // My tasks (self-service)
