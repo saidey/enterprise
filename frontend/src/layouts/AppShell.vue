@@ -585,6 +585,7 @@ const navigation = computed(() => {
           { name: 'Overview', to: '/apps/accounting' },
           { name: 'Journals', to: '/apps/accounting/journals' },
           { name: 'Reports', to: '/apps/accounting/reports' },
+          { name: 'Settings', to: '/apps/accounting/settings' },
         ],
       },
     ]

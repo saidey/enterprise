@@ -535,6 +535,18 @@ export function createTaskComment(taskId, payload) {
 }
 
 /* ============================================================================
+ * Accounting settings
+ * ========================================================================== */
+
+export function fetchAccountingSettings() {
+    return api.get('/api/v1/accounting/settings')
+}
+
+export function updateAccountingSettings(payload) {
+    return api.put('/api/v1/accounting/settings', payload)
+}
+
+/* ============================================================================
  * Operations & session
  * ========================================================================== */
 

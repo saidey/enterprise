@@ -13,6 +13,6 @@ class AccountingServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Placeholder: add routes when accounting module is implemented
+        $this->loadRoutesFrom(__DIR__.'/routes/api.php');
     }
 }

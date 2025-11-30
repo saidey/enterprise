@@ -129,6 +129,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'accounting' },
     },
     {
+        path: '/apps/accounting/settings',
+        name: 'app-accounting-settings',
+        component: () => import('./views/AccountingSettingsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: true, requiresOperation: true, app: 'accounting' },
+    },
+    {
         path: '/apps/projects',
         name: 'app-projects',
         component: () => import('./views/AppProjectsView.vue'),

@@ -32,6 +32,11 @@ return [
     'projects.manage_wbs',
     'projects.approve_tasks',
 
+    // Accounting (module access and settings)
+    'accounting.view',
+    'accounting.manage',
+    'accounting.manage_settings',
+
     // Admin / permissions management
     'users.manage_permissions',
 ];
