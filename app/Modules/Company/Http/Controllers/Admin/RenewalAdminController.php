@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\SubscriptionRenewalSubmission;
 use App\Modules\Company\Models\CompanySubscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RenewalAdminController extends Controller
 {
@@ -68,5 +69,13 @@ class RenewalAdminController extends Controller
             'message' => 'Renewal approved and subscription updated.',
             'subscription' => $subscription,
         ]);
+    }
+
+    public function file(Request $request, SubscriptionRenewalSubmission $submission)
+    {
+        $this->authorizePlatform($request);
+        abort_unless($submission->file_path, 404);
+
+        return Storage::disk('private')->download($submission->file_path, $submission->original_name ?? 'slip');
     }
 }

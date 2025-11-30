@@ -83,22 +83,22 @@
                             v-if="item.children?.length"
                             class="ml-10 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10"
                           >
-                            <li v-for="child in item.children" :key="child.name">
-                              <router-link
-                                :to="child.to"
-                                @click="sidebarOpen = false"
-                                :class="[
-                                  isCurrentRoute(child.to)
-                                    ? 'text-indigo-600 dark:text-white'
-                                    : 'text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-white',
-                                  'group flex gap-x-2 rounded-md p-2 text-sm font-medium'
-                                ]"
-                              >
-                                <span class="mt-1.5 size-2 rounded-full bg-gray-300 dark:bg-white/30"></span>
-                                <span class="flex-1">{{ child.name }}</span>
-                              </router-link>
-                            </li>
-                          </ul>
+                        <li v-for="child in item.children" :key="child.name">
+                          <component
+                            :is="child.href ? 'a' : 'router-link'"
+                            v-bind="child.href ? { href: child.href, target: child.external ? '_blank' : '_self' } : { to: child.to, onClick: () => (sidebarOpen = false) }"
+                            :class="[
+                              !child.href && isCurrentRoute(child.to)
+                                ? 'text-indigo-600 dark:text-white'
+                                : 'text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-white',
+                              'group flex gap-x-2 rounded-md p-2 text-sm font-medium'
+                            ]"
+                          >
+                            <span class="mt-1.5 size-2 rounded-full bg-gray-300 dark:bg-white/30"></span>
+                            <span class="flex-1">{{ child.name }}</span>
+                          </component>
+                        </li>
+                      </ul>
                         </li>
                       </ul>
                     </li>
@@ -165,10 +165,11 @@
                   </component>
                   <ul v-if="item.children?.length" class="ml-10 space-y-1 border-l border-gray-200 pl-3 dark:border-white/10">
                     <li v-for="child in item.children" :key="child.name">
-                      <router-link
-                        :to="child.to"
+                      <component
+                        :is="child.href ? 'a' : 'router-link'"
+                        v-bind="child.href ? { href: child.href, target: child.external ? '_blank' : '_self' } : { to: child.to }"
                         :class="[
-                          isCurrentRoute(child.to)
+                          !child.href && isCurrentRoute(child.to)
                             ? 'text-indigo-600 dark:text-white'
                             : 'text-gray-600 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-white',
                           'group flex gap-x-2 rounded-md p-2 text-sm font-medium'
@@ -176,7 +177,7 @@
                       >
                         <span class="mt-1.5 size-2 rounded-full bg-gray-300 dark:bg-white/30"></span>
                         <span class="flex-1">{{ child.name }}</span>
-                      </router-link>
+                      </component>
                     </li>
                   </ul>
                 </li>
@@ -509,6 +510,7 @@ const navigation = computed(() => {
         icon: DocumentDuplicateIcon,
         children: [
           { name: 'Subscriptions', to: '/administrator/subscriptions' },
+          { name: 'Renewals', to: '/administrator/quotes' },
           { name: 'Invoices', to: '/administrator/invoices' },
           { name: 'Plans', to: '/administrator/plans' },
           { name: 'Billing settings', to: '/administrator/billing-settings' },
@@ -615,11 +617,14 @@ const navigation = computed(() => {
     return [
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
       { name: 'Companies', to: '/administrator/companies', icon: DocumentDuplicateIcon },
-      { name: 'Subscriptions', to: '/administrator/subscriptions', icon: DocumentDuplicateIcon },
-      { name: 'Renewals', to: '/administrator/renewals', icon: DocumentDuplicateIcon },
-      { name: 'Invoices', to: '/administrator/invoices', icon: DocumentDuplicateIcon },
-      { name: 'Plans', to: '/administrator/plans', icon: DocumentDuplicateIcon },
-      { name: 'Billing settings', to: '/administrator/billing-settings', icon: DocumentDuplicateIcon },
+      { name: 'Billing', icon: DocumentDuplicateIcon, to: '/administrator/subscriptions', children: [
+        { name: 'Subscriptions', to: '/administrator/subscriptions' },
+        { name: 'Renewals', to: '/administrator/renewals' },
+        { name: 'Quotes', to: '/administrator/quotes' },
+        { name: 'Invoices', to: '/administrator/invoices' },
+        { name: 'Plans', to: '/administrator/plans' },
+        { name: 'Billing settings', to: '/administrator/billing-settings' },
+      ]},
       { name: 'Audit logs', to: '/administrator/audit-logs', icon: DocumentDuplicateIcon },
       { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
       { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },

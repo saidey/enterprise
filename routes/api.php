@@ -93,11 +93,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/admin/plans/{plan}', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'destroy']);
     Route::get('/admin/invoices', [\App\Modules\Company\Http\Controllers\Admin\AdminInvoiceController::class, 'index']);
     Route::post('/admin/invoices/generate-upcoming', [\App\Modules\Company\Http\Controllers\Admin\AdminInvoiceController::class, 'generateUpcoming']);
+    Route::post('/admin/invoices/{invoice}/approve', [\App\Modules\Company\Http\Controllers\Admin\AdminInvoiceController::class, 'approveQuote']);
     Route::get('/admin/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'show']);
     Route::put('/admin/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'update']);
     Route::get('/admin/companies/{company}/operations', [\App\Modules\Company\Http\Controllers\Admin\CompanyOperationsAdminController::class, 'index']);
     Route::get('/admin/renewals', [\App\Modules\Company\Http\Controllers\Admin\RenewalAdminController::class, 'index']);
     Route::post('/admin/renewals/{submission}/approve', [\App\Modules\Company\Http\Controllers\Admin\RenewalAdminController::class, 'approve']);
+    Route::get('/admin/renewals/{submission}/file', [\App\Modules\Company\Http\Controllers\Admin\RenewalAdminController::class, 'file']);
     Route::get('/admin/audit/logs', [AuditLogController::class, 'platformIndex']);
     Route::get('/admin/audit/actions', [AuditLogController::class, 'platformActions']);
     Route::get('/admin/audit/logs/{log}', [AuditLogController::class, 'platformShow']);

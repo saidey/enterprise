@@ -54,4 +54,9 @@ class Invoice extends Model
     {
         return $this->belongsTo(Plan::class);
     }
+
+    public function renewalSubmissions()
+    {
+        return $this->hasMany(\App\Models\SubscriptionRenewalSubmission::class, 'quote_id');
+    }
 }

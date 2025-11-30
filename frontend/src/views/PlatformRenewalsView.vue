@@ -1,13 +1,14 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import AppShell from '../layouts/AppShell.vue'
-import { api } from '../api'
+import { apiInstance as api } from '../api'
 
 const loading = ref(true)
 const error = ref('')
 const success = ref('')
 const submissions = ref([])
 const busyId = ref(null)
+const apiBase = api?.defaults?.baseURL || ''
 
 const loadRenewals = async () => {
   loading.value = true
@@ -96,8 +97,9 @@ onMounted(loadRenewals)
                   <div class="flex items-center justify-end gap-2">
                     <a
                       v-if="sub.file_path"
-                      :href="`/storage/${sub.file_path}`"
+                      :href="`${apiBase}/api/admin/renewals/${sub.id}/file`"
                       target="_blank"
+                      rel="noopener"
                       class="text-sm font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
                     >
                       View slip

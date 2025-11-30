@@ -228,7 +228,8 @@ onMounted(loadBillingSettings)
                 <th class="px-3 py-2 text-left font-semibold">Quote #</th>
                 <th class="px-3 py-2 text-left font-semibold">Plan</th>
                 <th class="px-3 py-2 text-right font-semibold">Total</th>
-                <th class="px-3 py-2 text-left font-semibold">Created</th>
+                <th class="px-3 py-2 text-left font-semibold">Status</th>
+                <th class="px-3 py-2 text-left font-semibold">Submitted</th>
                 <th class="px-3 py-2 text-right font-semibold">Action</th>
               </tr>
             </thead>
@@ -237,7 +238,6 @@ onMounted(loadBillingSettings)
                 <td class="px-3 py-2 font-medium">{{ q.number }}</td>
                 <td class="px-3 py-2">{{ q.plan?.name }}</td>
                 <td class="px-3 py-2 text-right">{{ Number(q.total_amount).toFixed(2) }} {{ q.currency || 'MVR' }}</td>
-                <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ new Date(q.created_at).toLocaleDateString() }}</td>
                 <td class="px-3 py-2">
                   <span
                     v-if="q.status === 'paid'"
@@ -256,6 +256,7 @@ onMounted(loadBillingSettings)
                     class="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 ring-1 ring-gray-300/80 ring-inset dark:bg-white/5 dark:text-gray-300 dark:ring-white/10"
                   >{{ q.status }}</span>
                 </td>
+                <td class="px-3 py-2 text-gray-500 dark:text-gray-400">{{ new Date(q.created_at).toLocaleDateString() }}</td>
                 <td class="px-3 py-2 text-right">
                   <button
                     type="button"
@@ -267,7 +268,7 @@ onMounted(loadBillingSettings)
                 </td>
               </tr>
               <tr v-if="!quotes.length && !loadingQuotes">
-                <td colspan="5" class="px-3 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                <td colspan="6" class="px-3 py-4 text-center text-xs text-gray-500 dark:text-gray-400">
                   No quotes yet. Generate one to see it here.
                 </td>
               </tr>

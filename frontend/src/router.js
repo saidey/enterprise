@@ -237,6 +237,12 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
     },
     {
+        path: '/administrator/quotes',
+        name: 'platform-quotes',
+        component: () => import('./views/PlatformQuotesInvoicesView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
         path: '/administrator/billing-settings',
         name: 'platform-billing-settings',
         component: () => import('./views/PlatformBillingSettingsView.vue'),

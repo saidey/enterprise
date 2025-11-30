@@ -32,7 +32,7 @@ class ModulesAndPlansSeeder extends Seeder
             [
                 'id' => (string) Str::orderedUuid(),
                 'name' => 'Standard',
-                'price_monthly' => 250,
+                'price_monthly' => 5000,
                 'price_yearly' => 2700,
                 'trial_days' => 30,
                 'included_modules' => ['hr', 'projects', 'accounting', 'admin'],

@@ -7,6 +7,7 @@ use App\Models\Plan;
 use App\Models\Invoice;
 use App\Models\InvoiceLine;
 use App\Models\BillingSetting;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -52,6 +53,11 @@ class RenewalController extends Controller
         $nextNumber = str_pad((string) (Invoice::count() + 1), 4, '0', STR_PAD_LEFT);
         $number = 'QUO-'.$prefix.'-'.$nextNumber;
 
+        $periodStart = Carbon::now()->startOfDay();
+        $periodEnd = $data['period'] === 'yearly'
+            ? $periodStart->copy()->addYear()
+            : $periodStart->copy()->addMonth();
+
         $invoice = Invoice::create([
             'company_id' => $company->id,
             'plan_id' => $plan->id,
@@ -63,6 +69,8 @@ class RenewalController extends Controller
             'gst_amount' => $gstAmount,
             'total_amount' => $total,
             'notes' => 'Generated via renewal quote ('.$data['period'].')',
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
         ]);
 
         InvoiceLine::create([

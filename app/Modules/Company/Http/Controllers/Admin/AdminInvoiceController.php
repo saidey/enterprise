@@ -25,7 +25,7 @@ class AdminInvoiceController extends Controller
         $this->authorizePlatform($request);
 
         $invoices = Invoice::withoutGlobalScopes()
-            ->with('company:id,name', 'plan:id,name')
+            ->with('company:id,name', 'plan:id,name', 'renewalSubmissions')
             ->orderByDesc('issued_at')
             ->limit(200)
             ->get();
@@ -70,6 +70,50 @@ class AdminInvoiceController extends Controller
             'message' => 'Invoices generated.',
             'data' => $created,
         ]);
+    }
+
+    public function approveQuote(Request $request, Invoice $invoice)
+    {
+        $this->authorizePlatform($request);
+        abort_unless($invoice->status === 'quote', 422, 'Only quotes can be verified.');
+
+        $companyId = $invoice->company_id;
+        $planId = $invoice->plan_id;
+
+        $start = Carbon::now()->startOfDay();
+        $end = $invoice->period_end
+            ? Carbon::parse($invoice->period_end)
+            : ($invoice->period_start ? Carbon::parse($invoice->period_start)->copy()->addMonth() : $start->copy()->addMonth());
+
+        $diffDays = $end->diffInDays($start);
+        $billingCycle = $diffDays >= 360 ? 'yearly' : 'monthly';
+
+        $subscription = CompanySubscription::updateOrCreate(
+            ['company_id' => $companyId],
+            [
+                'plan_id' => $planId,
+                'status' => 'active',
+                'billing_cycle' => $billingCycle,
+                'current_period_start' => $start,
+                'current_period_end' => $end,
+                'next_billing_at' => $end,
+            ]
+        );
+
+        Company::where('id', $companyId)->update(['subscription_status' => 'active']);
+
+        // assign new invoice number (strip QUO)
+        $prefix = BillingSetting::first()?->invoice_prefix ?? 'INV';
+        $nextNumber = str_pad((string) (Invoice::withoutGlobalScopes()->where('status', '!=', 'quote')->count() + 1), 4, '0', STR_PAD_LEFT);
+        $invoice->number = $prefix.'-'.$nextNumber;
+
+        $invoice->status = 'paid';
+        $invoice->subscription_id = $subscription->id;
+        $invoice->issued_at = $invoice->issued_at ?? now();
+        $invoice->paid_at = now();
+        $invoice->save();
+
+        return response()->json(['message' => 'Quote verified and marked as paid.', 'data' => $invoice->fresh()]);
     }
 
     protected function createInvoiceFromSubscription(CompanySubscription $subscription): ?Invoice
