@@ -213,6 +213,18 @@ const routes = [
         meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
     },
     {
+        path: '/administrator/invoices',
+        name: 'platform-invoices',
+        component: () => import('./views/PlatformInvoicesView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
+        path: '/administrator/billing-settings',
+        name: 'platform-billing-settings',
+        component: () => import('./views/PlatformBillingSettingsView.vue'),
+        meta: { requiresAuth: true, requiresCompany: false, requiresOperation: false, app: 'platform' },
+    },
+    {
         path: '/administrator/plans',
         name: 'platform-plans',
         component: () => import('./views/PlatformPlansView.vue'),

@@ -490,6 +490,26 @@ export function fetchAdminPlans() {
     return api.get('/api/admin/plans')
 }
 
+export function fetchAdminInvoices() {
+    return api.get('/api/admin/invoices')
+}
+
+export function generateAdminInvoices() {
+    return api.post('/api/admin/invoices/generate-upcoming')
+}
+
+export function fetchBillingSettings() {
+    return api.get('/api/admin/billing/settings')
+}
+
+export function updateBillingSettings(payload) {
+    return api.put('/api/admin/billing/settings', payload)
+}
+
+export function fetchAdminOperationsByCompany(companyId) {
+    return api.get(`/api/admin/companies/${companyId}/operations`)
+}
+
 export function fetchTaskAttachments(taskId) {
     return api.get(`/api/v1/projects/tasks/${taskId}/attachments`)
 }

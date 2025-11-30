@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             ModulesAndPlansSeeder::class,
             MaldivesIslandsSeeder::class,
+            SellerCompanySeeder::class,
 
         ]);
     }

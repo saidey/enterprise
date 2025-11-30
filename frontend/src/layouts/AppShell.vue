@@ -503,12 +503,33 @@ const navigation = computed(() => {
   if (isPlatformContext.value) {
     return [
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
-      { name: 'Companies', to: '/administrator/companies', icon: DocumentDuplicateIcon },
-      { name: 'Subscriptions', to: '/administrator/subscriptions', icon: DocumentDuplicateIcon },
-      { name: 'Plans', to: '/administrator/plans', icon: DocumentDuplicateIcon },
-      { name: 'Audit logs', to: '/administrator/audit-logs', icon: DocumentDuplicateIcon },
-      { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
-      { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },
+      {
+        name: 'Billing',
+        to: '/administrator/subscriptions',
+        icon: DocumentDuplicateIcon,
+        children: [
+          { name: 'Subscriptions', to: '/administrator/subscriptions' },
+          { name: 'Invoices', to: '/administrator/invoices' },
+          { name: 'Plans', to: '/administrator/plans' },
+          { name: 'Billing settings', to: '/administrator/billing-settings' },
+        ],
+      },
+      {
+        name: 'Tenants',
+        to: '/administrator/companies',
+        icon: DocumentDuplicateIcon,
+        children: [{ name: 'Companies', to: '/administrator/companies' }],
+      },
+      {
+        name: 'Monitoring',
+        to: '/administrator/audit-logs',
+        icon: DocumentDuplicateIcon,
+        children: [
+          { name: 'Audit logs', to: '/administrator/audit-logs' },
+          { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true },
+          { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true },
+        ],
+      },
     ]
   }
 
@@ -594,7 +615,9 @@ const navigation = computed(() => {
       { name: 'Platform admin', to: '/administrator', icon: HomeIcon },
       { name: 'Companies', to: '/administrator/companies', icon: DocumentDuplicateIcon },
       { name: 'Subscriptions', to: '/administrator/subscriptions', icon: DocumentDuplicateIcon },
+      { name: 'Invoices', to: '/administrator/invoices', icon: DocumentDuplicateIcon },
       { name: 'Plans', to: '/administrator/plans', icon: DocumentDuplicateIcon },
+      { name: 'Billing settings', to: '/administrator/billing-settings', icon: DocumentDuplicateIcon },
       { name: 'Audit logs', to: '/administrator/audit-logs', icon: DocumentDuplicateIcon },
       { name: 'Horizon', href: `${apiBase.value}/horizon`, external: true, icon: DocumentDuplicateIcon },
       { name: 'Pulse', href: `${apiBase.value}/pulse`, external: true, icon: DocumentDuplicateIcon },

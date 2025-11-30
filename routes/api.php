@@ -73,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/plans', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'store']);
     Route::put('/admin/plans/{plan}', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'update']);
     Route::delete('/admin/plans/{plan}', [\App\Modules\Company\Http\Controllers\Admin\PlanAdminController::class, 'destroy']);
+    Route::get('/admin/invoices', [\App\Modules\Company\Http\Controllers\Admin\AdminInvoiceController::class, 'index']);
+    Route::post('/admin/invoices/generate-upcoming', [\App\Modules\Company\Http\Controllers\Admin\AdminInvoiceController::class, 'generateUpcoming']);
+    Route::get('/admin/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'show']);
+    Route::put('/admin/billing/settings', [\App\Modules\Company\Http\Controllers\Admin\BillingSettingsController::class, 'update']);
+    Route::get('/admin/companies/{company}/operations', [\App\Modules\Company\Http\Controllers\Admin\CompanyOperationsAdminController::class, 'index']);
     Route::get('/admin/audit/logs', [AuditLogController::class, 'platformIndex']);
     Route::get('/admin/audit/actions', [AuditLogController::class, 'platformActions']);
     Route::get('/admin/audit/logs/{log}', [AuditLogController::class, 'platformShow']);
