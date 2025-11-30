@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Models\Traits\Auditable;
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Module extends Model
 {
     use UsesOrderedUuid;
     use Auditable;
+    use SoftDeletes;
 
     protected $fillable = [
         'code',

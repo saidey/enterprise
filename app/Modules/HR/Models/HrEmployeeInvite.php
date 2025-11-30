@@ -4,10 +4,12 @@ namespace App\Modules\HR\Models;
 
 use App\Models\Traits\UsesOrderedUuid;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HrEmployeeInvite extends Model
 {
     use UsesOrderedUuid;
+    use SoftDeletes;
 
     protected $fillable = [
         'company_id',

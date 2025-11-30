@@ -6,12 +6,14 @@ use App\Models\Traits\UsesOrderedUuid;
 use App\Models\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Company extends Model
 {
     use HasFactory;
     use UsesOrderedUuid;
     use Auditable;
+    use SoftDeletes;
 
     protected $table = 'companies';
 

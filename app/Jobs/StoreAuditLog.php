@@ -35,10 +35,16 @@ class StoreAuditLog implements ShouldQueue
             $companyId = null;
         }
 
+        // If operation no longer exists (or wasn't set), avoid FK failures
+        $operationId = $this->operationId;
+        if ($operationId && ! \App\Modules\Company\Models\Operation::find($operationId)) {
+            $operationId = null;
+        }
+
         AuditLog::create([
             'user_id' => $this->userId,
             'company_id' => $companyId,
-            'operation_id' => $this->operationId,
+            'operation_id' => $operationId,
             'action' => $this->action,
             'auditable_type' => $this->auditableType,
             'auditable_id' => $this->auditableId,

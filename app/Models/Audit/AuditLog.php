@@ -9,11 +9,13 @@ use App\Models\Traits\UsesOrderedUuid; // if you're using ordered UUIDs
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AuditLog extends Model
 {
     use UsesOrderedUuid; // or remove if not using
     use BelongsToCompany;
+    use SoftDeletes;
 
     protected $table = 'audit_logs';
 

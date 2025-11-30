@@ -8,12 +8,14 @@ use App\Models\Traits\BelongsToCompany;
 use App\Models\Traits\UsesOrderedUuid;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
     use UsesOrderedUuid;
     use BelongsToCompany;
     use Auditable;
+    use SoftDeletes;
 
     protected $fillable = [
         'company_id',
